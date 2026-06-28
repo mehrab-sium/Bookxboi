@@ -1,0 +1,17 @@
+{
+  "name": "Aether Reader - Premium WebGL E-Reader",
+  "short_name": "Aether Reader",
+  "description": "Premium client-side e-reader with WebGL page curls and on-device AI translations.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030305",
+  "theme_color": "#07070c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

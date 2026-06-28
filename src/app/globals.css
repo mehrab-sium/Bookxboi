@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas-light: #F5F2EB;
+  --color-canvas-dark: #EFECE6;
+  --color-contrast-midnight: #1C2321;
+  --color-contrast-sepia: #111413;
+  --color-glass-bg: rgba(255, 255, 255, 0.15);
+  --color-glass-border: rgba(255, 255, 255, 0.4);
+  
+  --font-display: var(--font-playfair), serif;
+  --font-sans: var(--font-inter), sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-canvas-light text-contrast-midnight min-h-screen overflow-x-hidden;
+    /* Advanced Typography Rendering Engine */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "liga" 1, "kern" 1, "swsh" 1;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Layering */
+  .glass-panel {
+    background-color: var(--color-glass-bg);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid var(--color-glass-border);
+  }
+
+  .glass-panel-thick {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Dual-Font Typography Setup */
+  .text-soul {
+    @apply font-display font-medium;
+    /* Compress leading for massive headers */
+    line-height: 0.85;
+    /* Let characters breathing room */
+    letter-spacing: -0.02em; 
+  }
+  
+  .text-core {
+    @apply font-sans;
+    /* Microscopic metadata / paragraph text needs expanded tracking */
+    letter-spacing: 0.05em;
+  }
+}
