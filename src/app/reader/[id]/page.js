@@ -169,50 +169,76 @@ export default function ReaderPage() {
               }
             });
 
-            // iOS WebKit & Universal Document Selection Handler
+            // iOS WebKit (iPad) & Universal Document Selection Handler (500ms Trigger)
             rend.on('rendered', (section, view) => {
               const doc = view.document;
               if (!doc) return;
 
-              const handleSelection = () => {
+              const handleSelectionCheck = () => {
                 if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
 
                 selectionTimeoutRef.current = setTimeout(() => {
                   try {
-                    const sel = doc.getSelection();
-                    if (!sel || sel.isCollapsed) return;
+                    let sel = doc.getSelection();
+                    let activeDoc = doc;
+
+                    // Fallback to top-level window selection if iframe selection is empty on iOS
+                    if ((!sel || !sel.toString().trim()) && typeof window !== 'undefined' && window.getSelection) {
+                      const topSel = window.getSelection();
+                      if (topSel && topSel.toString().trim()) {
+                        sel = topSel;
+                        activeDoc = document;
+                      }
+                    }
+
+                    if (!sel) return;
 
                     const word = sel.toString().trim();
                     if (!word || word.length < 2) return;
 
+                    if (sel.rangeCount === 0) return;
                     const range = sel.getRangeAt(0);
                     if (!range) return;
 
-                    const rect = range.getBoundingClientRect();
+                    let rect = range.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) {
+                      const clientRects = range.getClientRects();
+                      if (clientRects.length > 0) {
+                        rect = clientRects[0];
+                      }
+                    }
+
                     const iframeElement = view.iframe || doc.defaultView.frameElement;
-                    const iframeRect = iframeElement ? iframeElement.getBoundingClientRect() : { left: 0, top: 0 };
+                    const iframeRect = (iframeElement && activeDoc === doc) ? iframeElement.getBoundingClientRect() : { left: 0, top: 0 };
 
                     const contextText = extractRichContext(range, word);
 
-                    const absoluteX = rect.left + iframeRect.left;
-                    const absoluteY = rect.top + iframeRect.top;
+                    let absoluteX = rect.left + iframeRect.left;
+                    let absoluteY = rect.top + iframeRect.top;
 
-                    const rectWidth = rect.width || 80;
-                    const rectHeight = rect.height || 24;
+                    // Fallback positioning if iOS returns 0,0 bounds
+                    if (absoluteX <= 0 && absoluteY <= 0) {
+                      absoluteX = window.innerWidth / 2 - 160;
+                      absoluteY = window.innerHeight / 2 - 100;
+                    }
+
+                    const rectWidth = Math.max(rect.width || 0, 80);
+                    const rectHeight = Math.max(rect.height || 0, 24);
 
                     triggerAiDictionary(word, contextText, absoluteX, absoluteY, rectWidth, rectHeight);
                   } catch (err) {
                     console.error('iOS WebKit selection handler error:', err);
                   }
-                }, 350);
+                }, 500); // 500ms delay to allow native iOS selection handles to settle
               };
 
-              doc.addEventListener('touchend', handleSelection, { passive: true });
-              doc.addEventListener('mouseup', handleSelection, { passive: true });
+              doc.addEventListener('touchend', handleSelectionCheck, { passive: true });
+              doc.addEventListener('mouseup', handleSelectionCheck, { passive: true });
+              doc.addEventListener('pointerup', handleSelectionCheck, { passive: true });
               doc.addEventListener('selectionchange', () => {
                 const sel = doc.getSelection();
                 if (sel && !sel.isCollapsed && sel.toString().trim().length >= 2) {
-                  handleSelection();
+                  handleSelectionCheck();
                 }
               }, { passive: true });
             });
@@ -243,7 +269,7 @@ export default function ReaderPage() {
                 } catch (err) {
                   console.error('Error getting selection:', err);
                 }
-              }, 350);
+              }, 500);
             });
 
             rend.on('click', () => {
