@@ -18,7 +18,8 @@ import {
   RotateCcw, 
   Check, 
   BookOpen,
-  AlignLeft
+  AlignLeft,
+  Sparkles
 } from 'lucide-react';
 import { getBookData, updateReadingProgress } from '../../../lib/libraryStore';
 import GlassTooltip from '../../../components/GlassTooltip';
@@ -39,10 +40,37 @@ export default function ReaderPage() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  // Expanded Google Fonts Catalog
+  const fontCatalog = {
+    garamond: { name: 'EB Garamond', family: "'EB Garamond', Georgia, serif", category: 'Serif Classic' },
+    lora: { name: 'Lora', family: "'Lora', Georgia, serif", category: 'Modern Serif' },
+    spectral: { name: 'Spectral', family: "'Spectral', Georgia, serif", category: 'Luxury Serif' },
+    merriweather: { name: 'Merriweather', family: "'Merriweather', Georgia, serif", category: 'Warm Serif' },
+    playfair: { name: 'Playfair', family: "'Playfair Display', Georgia, serif", category: 'Display Serif' },
+    cinzel: { name: 'Cinzel', family: "'Cinzel', serif", category: 'Classical Serif' },
+    georgia: { name: 'Georgia', family: "Georgia, 'Times New Roman', serif", category: 'Traditional' },
+    inter: { name: 'Inter', family: "'Inter', system-ui, sans-serif", category: 'Modern Sans' },
+    roboto: { name: 'Roboto', family: "'Roboto', sans-serif", category: 'Clean Sans' },
+    nunito: { name: 'Nunito', family: "'Nunito', sans-serif", category: 'Soft Sans' },
+    jakarta: { name: 'Plus Jakarta', family: "'Plus Jakarta Sans', sans-serif", category: 'Geometric Sans' },
+    hyperlegible: { name: 'Atkinson', family: "'Atkinson Hyperlegible', sans-serif", category: 'Dyslexic Friendly' },
+    jetbrains: { name: 'JetBrains', family: "'JetBrains Mono', monospace", category: 'Monospace' },
+    firacode: { name: 'Fira Code', family: "'Fira Code', monospace", category: 'Code Mono' }
+  };
+
+  // Full Pitch Dark & Atmosphere Theme Tones Catalog
+  const themeColors = {
+    canvas: { name: 'Sepia Canvas', background: '#F5F2EB', color: '#1C2321', cardBg: '#FAF8F5', border: 'rgba(28, 35, 33, 0.12)' },
+    dark: { name: 'Dark Charcoal', background: '#111413', color: '#F5F2EB', cardBg: '#181C1B', border: 'rgba(245, 242, 235, 0.15)' },
+    oled: { name: 'OLED Pitch Black', background: '#000000', color: '#E5E5E5', cardBg: '#050505', border: 'rgba(255, 255, 255, 0.18)' },
+    parchment: { name: 'Warm Parchment', background: '#FAF6EE', color: '#2B261F', cardBg: '#FFFDF9', border: 'rgba(43, 38, 31, 0.12)' },
+    white: { name: 'Crisp White', background: '#F9F9FB', color: '#1C2321', cardBg: '#FFFFFF', border: 'rgba(0, 0, 0, 0.08)' }
+  };
+
   // Settings State (Persisted in localStorage)
   const [readerTheme, setReaderTheme] = useState('canvas');
   const [readerFont, setReaderFont] = useState('garamond');
-  const [fontSizePercent, setFontSizePercent] = useState(50); // 0% = 12px / 75%, 50% = 18px / 100%, 100% = 28px / 155%
+  const [fontSizePx, setFontSizePx] = useState(18); // Direct 0px to 100px font size scale
   const [lineHeight, setLineHeight] = useState(1.75);
 
   // Load saved preferences on mount
@@ -50,48 +78,23 @@ export default function ReaderPage() {
     try {
       const savedTheme = localStorage.getItem('bookxboi_theme');
       const savedFont = localStorage.getItem('bookxboi_font');
-      const savedSize = localStorage.getItem('bookxboi_size');
+      const savedSize = localStorage.getItem('bookxboi_sizepx');
       const savedLineHeight = localStorage.getItem('bookxboi_lineheight');
 
-      if (savedTheme) setReaderTheme(savedTheme);
+      if (savedTheme && themeColors[savedTheme]) setReaderTheme(savedTheme);
       if (savedFont && fontCatalog[savedFont]) setReaderFont(savedFont);
-      if (savedSize) setFontSizePercent(Number(savedSize));
+      if (savedSize) setFontSizePx(Math.max(0, Math.min(100, Number(savedSize))));
       if (savedLineHeight) setLineHeight(Number(savedLineHeight));
     } catch (e) {}
   }, []);
 
-  // Save preferences
+  // Save preferences helper
   const updateSetting = (key, value, setter) => {
     setter(value);
     try {
       localStorage.setItem(`bookxboi_${key}`, value);
     } catch (e) {}
   };
-
-  // Theme Tones Catalog
-  const themeColors = {
-    canvas: { name: 'Sepia Canvas', background: '#F5F2EB', color: '#1C2321', cardBg: '#FAF8F5', border: 'rgba(28, 35, 33, 0.12)' },
-    dark: { name: 'Charcoal', background: '#111413', color: '#F5F2EB', cardBg: '#1C2321', border: 'rgba(245, 242, 235, 0.15)' },
-    oled: { name: 'OLED Black', background: '#000000', color: '#E5E5E5', cardBg: '#0A0A0A', border: 'rgba(255, 255, 255, 0.2)' },
-    parchment: { name: 'Parchment', background: '#FAF6EE', color: '#2B261F', cardBg: '#FFFDF9', border: 'rgba(43, 38, 31, 0.12)' },
-    white: { name: 'Crisp White', background: '#F9F9FB', color: '#1C2321', cardBg: '#FFFFFF', border: 'rgba(0, 0, 0, 0.08)' }
-  };
-
-  // Google Fonts Catalog
-  const fontCatalog = {
-    garamond: { name: 'EB Garamond', family: "'EB Garamond', Georgia, serif", category: 'Serif Classic' },
-    lora: { name: 'Lora', family: "'Lora', Georgia, serif", category: 'Modern Serif' },
-    spectral: { name: 'Spectral', family: "'Spectral', Georgia, serif", category: 'Luxury Serif' },
-    georgia: { name: 'Georgia', family: "Georgia, 'Times New Roman', serif", category: 'Traditional' },
-    inter: { name: 'Inter', family: "'Inter', system-ui, sans-serif", category: 'Modern Sans' },
-    jakarta: { name: 'Plus Jakarta', family: "'Plus Jakarta Sans', sans-serif", category: 'Clean Sans' },
-    hyperlegible: { name: 'Atkinson', family: "'Atkinson Hyperlegible', sans-serif", category: 'Dyslexic Friendly' },
-    mono: { name: 'JetBrains', family: "'JetBrains Mono', monospace", category: 'Monospace' }
-  };
-
-  // Convert fontSizePercent (0 to 100) to pixel size (12px to 28px) and EPUB scale (75% to 155%)
-  const calculatedPxSize = Math.round(12 + (fontSizePercent / 100) * 16);
-  const calculatedEpubScale = `${Math.round(75 + (fontSizePercent / 100) * 80)}%`;
 
   // PDF Reader State
   const [pdfDoc, setPdfDoc] = useState(null);
@@ -121,73 +124,6 @@ export default function ReaderPage() {
   const closeAiDictionary = () => {
     setSelectedWord('');
     setSelectionRect(null);
-  };
-
-  // Helper to extract word and 1-2 lines surrounding context at (x, y) coordinates for Apple Pencil & Touch
-  const getWordAtPoint = (doc, x, y) => {
-    if (!doc) return null;
-
-    let range = null;
-    if (doc.caretRangeFromPoint) {
-      range = doc.caretRangeFromPoint(x, y);
-    } else if (doc.caretPositionFromPoint) {
-      const pos = doc.caretPositionFromPoint(x, y);
-      if (pos && pos.offsetNode) {
-        range = doc.createRange();
-        range.setStart(pos.offsetNode, pos.offset);
-        range.setEnd(pos.offsetNode, pos.offset);
-      }
-    }
-
-    if (!range || !range.startContainer || range.startContainer.nodeType !== 3) {
-      return null;
-    }
-
-    const textNode = range.startContainer;
-    const text = textNode.textContent;
-    const offset = range.startOffset;
-
-    if (!text || offset < 0 || offset > text.length) return null;
-
-    let start = offset;
-    while (start > 0 && /[\w\u00C0-\u024F\u0980-\u09FF'-]/.test(text[start - 1])) {
-      start--;
-    }
-
-    let end = offset;
-    while (end < text.length && /[\w\u00C0-\u024F\u0980-\u09FF'-]/.test(text[end])) {
-      end++;
-    }
-
-    const word = text.slice(start, end).trim().replace(/^['"-]+|['"-]+$/g, '');
-    if (!word || word.length < 2) return null;
-
-    const wordRange = doc.createRange();
-    wordRange.setStart(textNode, start);
-    wordRange.setEnd(textNode, end);
-
-    let parent = textNode.parentNode;
-    while (parent && parent.ownerDocument && parent !== parent.ownerDocument.body && !['P', 'DIV', 'BLOCKQUOTE', 'SECTION', 'ARTICLE', 'BODY'].includes(parent.nodeName)) {
-      parent = parent.parentNode;
-    }
-
-    let fullText = parent ? (parent.textContent || parent.innerText || '').trim() : word;
-    if (fullText.length > 280) {
-      const idx = fullText.indexOf(word);
-      if (idx !== -1) {
-        const pStart = Math.max(0, idx - 110);
-        const pEnd = Math.min(fullText.length, idx + word.length + 110);
-        fullText = (pStart > 0 ? '...' : '') + fullText.substring(pStart, pEnd).trim() + (pEnd < fullText.length ? '...' : '');
-      }
-    }
-
-    const rect = wordRange.getBoundingClientRect();
-
-    return {
-      word,
-      context: fullText || word,
-      rect
-    };
   };
 
   // Helper to extract 1-2 lines (~240 characters) of rich surrounding context for AI range selection
@@ -270,12 +206,12 @@ export default function ReaderPage() {
 
             // Register Themes
             rend.themes.register('canvas', { "body": { "background": "#FAF8F5 !important", "color": "#1C2321 !important" } });
-            rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
-            rend.themes.register('oled', { "body": { "background": "#000000 !important", "color": "#E5E5E5 !important" } });
+            rend.themes.register('dark', { "body": { "background": "#181C1B !important", "color": "#F5F2EB !important" } });
+            rend.themes.register('oled', { "body": { "background": "#050505 !important", "color": "#E5E5E5 !important" } });
             rend.themes.register('parchment', { "body": { "background": "#FFFDF9 !important", "color": "#2B261F !important" } });
             rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
 
-            // Apply selected font, size, and line-height
+            // Apply selected font, 0px-100px font-size, and line-height
             const fontObj = fontCatalog[readerFont] || fontCatalog.garamond;
             rend.themes.default({
               "html, body": {
@@ -286,7 +222,7 @@ export default function ReaderPage() {
               },
               "p, div, span, blockquote": {
                 "font-family": `${fontObj.family} !important`,
-                "font-size": `${calculatedEpubScale} !important`,
+                "font-size": `${fontSizePx}px !important`,
                 "line-height": `${lineHeight} !important`
               },
               "img, svg": {
@@ -298,55 +234,11 @@ export default function ReaderPage() {
 
             rend.themes.select(readerTheme);
 
-            // Apple Pencil Hover / Touch Hold & WebKit Document Selection Handler
+            // Document Explicit Selection Handler (NO Hover auto-trigger to save AI tokens!)
             rend.on('rendered', (section, view) => {
               const doc = view.document;
               if (!doc) return;
 
-              let hoverTimer = null;
-              let lastHoverX = 0;
-              let lastHoverY = 0;
-
-              const triggerPointWord = (x, y) => {
-                const result = getWordAtPoint(doc, x, y);
-                if (result) {
-                  const iframeElement = view.iframe || doc.defaultView.frameElement;
-                  const iframeRect = iframeElement ? iframeElement.getBoundingClientRect() : { left: 0, top: 0 };
-
-                  triggerAiDictionary(
-                    result.word,
-                    result.context,
-                    result.rect.left + iframeRect.left,
-                    result.rect.top + iframeRect.top,
-                    Math.max(result.rect.width, 60),
-                    Math.max(result.rect.height, 24)
-                  );
-                }
-              };
-
-              // 1. Apple Pencil Hover & Stylus Move Trigger (500ms Dwell)
-              doc.addEventListener('pointermove', (e) => {
-                const dist = Math.hypot(e.clientX - lastHoverX, e.clientY - lastHoverY);
-                if (dist > 10) {
-                  lastHoverX = e.clientX;
-                  lastHoverY = e.clientY;
-                  if (hoverTimer) clearTimeout(hoverTimer);
-
-                  hoverTimer = setTimeout(() => {
-                    triggerPointWord(e.clientX, e.clientY);
-                  }, 500);
-                }
-              }, { passive: true });
-
-              // 2. Apple Pencil / Touch Hold & Tap Trigger (500ms Hold)
-              doc.addEventListener('pointerdown', (e) => {
-                if (hoverTimer) clearTimeout(hoverTimer);
-                hoverTimer = setTimeout(() => {
-                  triggerPointWord(e.clientX, e.clientY);
-                }, 500);
-              }, { passive: true });
-
-              // 3. Selection Event Fallback
               const handleSelectionCheck = () => {
                 if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
 
@@ -363,7 +255,7 @@ export default function ReaderPage() {
                       }
                     }
 
-                    if (!sel) return;
+                    if (!sel || sel.isCollapsed) return;
 
                     const word = sel.toString().trim();
                     if (!word || word.length < 2) return;
@@ -398,14 +290,13 @@ export default function ReaderPage() {
 
                     triggerAiDictionary(word, contextText, absoluteX, absoluteY, rectWidth, rectHeight);
                   } catch (err) {
-                    console.error('iOS WebKit selection handler error:', err);
+                    console.error('Selection handler error:', err);
                   }
-                }, 500);
+                }, 400);
               };
 
               doc.addEventListener('touchend', handleSelectionCheck, { passive: true });
               doc.addEventListener('mouseup', handleSelectionCheck, { passive: true });
-              doc.addEventListener('pointerup', handleSelectionCheck, { passive: true });
               doc.addEventListener('selectionchange', () => {
                 const sel = doc.getSelection();
                 if (sel && !sel.isCollapsed && sel.toString().trim().length >= 2) {
@@ -440,7 +331,7 @@ export default function ReaderPage() {
                 } catch (err) {
                   console.error('Error getting selection:', err);
                 }
-              }, 500);
+              }, 400);
             });
 
             rend.on('click', () => {
@@ -494,7 +385,7 @@ export default function ReaderPage() {
     };
   }, [id, router]);
 
-  // Dynamically update iframe styles when font, size, theme, or line-height change
+  // Dynamically update iframe styles when font, 0px-100px font-size, theme, or line-height change
   useEffect(() => {
     if (renditionRef.current) {
       renditionRef.current.themes.select(readerTheme);
@@ -506,12 +397,12 @@ export default function ReaderPage() {
         },
         "p, div, span, blockquote": {
           "font-family": `${fontObj.family} !important`,
-          "font-size": `${calculatedEpubScale} !important`,
+          "font-size": `${fontSizePx}px !important`,
           "line-height": `${lineHeight} !important`
         }
       });
     }
-  }, [readerTheme, readerFont, fontSizePercent, lineHeight]);
+  }, [readerTheme, readerFont, fontSizePx, lineHeight]);
 
   // Window Resize Listener
   useEffect(() => {
@@ -580,27 +471,50 @@ export default function ReaderPage() {
     }
   };
 
-  const fabStyle = {
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
+  const currentColors = themeColors[readerTheme] || themeColors.canvas;
+
+  // Sleek, non-blocking floating controls style
+  const topNavStyle = {
+    position: 'absolute',
+    top: '16px',
+    zIndex: 50,
+    width: '38px',
+    height: '38px',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    position: 'absolute',
-    zIndex: 50,
-    width: '48px',
-    height: '48px',
-    boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
-    transition: 'transform 0.2s, background 0.2s, color 0.2s'
-  };
-
-  const dynamicFabStyle = {
-    ...fabStyle,
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     color: readerTheme === 'dark' || readerTheme === 'oled' ? '#F5F2EB' : '#1C2321',
     background: readerTheme === 'dark' || readerTheme === 'oled' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(245, 242, 235, 0.85)',
-    border: readerTheme === 'dark' || readerTheme === 'oled' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(28, 35, 33, 0.12)'
+    border: readerTheme === 'dark' || readerTheme === 'oled' ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid rgba(28, 35, 33, 0.12)',
+    boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
+    transition: 'transform 0.2s ease, opacity 0.2s ease'
+  };
+
+  // Compact, non-blocking side page-turn buttons
+  const sideNavStyle = {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    zIndex: 40,
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    color: readerTheme === 'dark' || readerTheme === 'oled' ? '#F5F2EB' : '#1C2321',
+    background: readerTheme === 'dark' || readerTheme === 'oled' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(245, 242, 235, 0.82)',
+    border: readerTheme === 'dark' || readerTheme === 'oled' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(28, 35, 33, 0.12)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    opacity: 0.75,
+    transition: 'opacity 0.2s ease, transform 0.2s ease'
   };
 
   if (!activeBook) {
@@ -611,15 +525,13 @@ export default function ReaderPage() {
     );
   }
 
-  const currentColors = themeColors[readerTheme] || themeColors.canvas;
-
   return (
     <div style={{ height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden', background: currentColors.background, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       
       {/* Top Reading Progress Badge & Micro Indicator Line */}
       <div style={{
         position: 'absolute',
-        top: '20px',
+        top: '16px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 50,
@@ -630,13 +542,13 @@ export default function ReaderPage() {
         pointerEvents: 'none'
       }}>
         <div style={{
-          background: readerTheme === 'dark' || readerTheme === 'oled' ? 'rgba(28, 35, 33, 0.85)' : 'rgba(245, 242, 235, 0.9)',
+          background: readerTheme === 'dark' || readerTheme === 'oled' ? 'rgba(24, 28, 27, 0.9)' : 'rgba(245, 242, 235, 0.92)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          padding: '5px 14px',
+          padding: '4px 12px',
           borderRadius: '9999px',
           border: '1px solid rgba(212, 175, 55, 0.4)',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)'
         }}>
           <span style={{
             fontSize: '11px',
@@ -649,7 +561,7 @@ export default function ReaderPage() {
           </span>
         </div>
         <div style={{
-          width: '100px',
+          width: '90px',
           height: '3px',
           background: readerTheme === 'dark' || readerTheme === 'oled' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
           borderRadius: '2px',
@@ -667,59 +579,74 @@ export default function ReaderPage() {
       {/* Floating Controls */}
       <button 
         onClick={() => router.push('/')}
-        style={{ ...dynamicFabStyle, top: '20px', left: '20px' }}
+        style={{ ...topNavStyle, left: '16px' }}
         title="Back to Library"
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.08)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <ArrowLeft size={22} />
+        <ArrowLeft size={18} />
       </button>
 
       <button 
         onClick={() => setIsSettingsOpen(true)}
-        style={{ ...dynamicFabStyle, top: '20px', right: '20px' }}
+        style={{ ...topNavStyle, right: '16px' }}
         title="Reader Settings"
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.08)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <Settings size={22} />
+        <Settings size={18} />
       </button>
 
+      {/* Compact Side Page-Turn Buttons (Positioned to Avoid Mobile Content Overlap) */}
       <button 
         onClick={handlePagePrev}
-        style={{ ...dynamicFabStyle, top: '50%', left: '20px', transform: 'translateY(-50%)' }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
+        style={{ ...sideNavStyle, left: '8px' }}
+        title="Previous Page"
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.75'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
       >
-        <ChevronLeft size={22} />
+        <ChevronLeft size={20} />
       </button>
 
       <button 
         onClick={handlePageNext}
-        style={{ ...dynamicFabStyle, top: '50%', right: '20px', transform: 'translateY(-50%)' }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
+        style={{ ...sideNavStyle, right: '8px' }}
+        title="Next Page"
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.75'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
       >
-        <ChevronRight size={22} />
+        <ChevronRight size={20} />
       </button>
 
       {/* Responsive Book Frame Canvas with outer padding */}
       <div 
         style={{
-          width: 'min(92vw, 1050px)',
-          height: 'min(85vh, 830px)',
+          width: 'min(94vw, 1050px)',
+          height: 'min(86vh, 830px)',
           margin: '0 auto',
           position: 'relative',
           borderRadius: '16px',
           background: currentColors.cardBg,
           border: `1px solid ${currentColors.border}`,
-          boxShadow: '0 25px 60px -15px rgba(0,0,0,0.18)',
+          boxShadow: readerTheme === 'oled' ? 'none' : '0 25px 60px -15px rgba(0,0,0,0.22)',
           overflow: 'hidden',
-          padding: '24px 32px',
+          padding: '20px 24px',
           boxSizing: 'border-box',
           transition: 'background 0.3s ease, border 0.3s ease'
         }}
       >
+        {/* Left & Right Tap Zones for Effortless Mobile Page Turning */}
+        <div 
+          onClick={handlePagePrev}
+          style={{ position: 'absolute', top: 0, left: 0, width: '12%', height: '100%', zIndex: 15, cursor: 'pointer' }}
+          title="Previous Page"
+        />
+        <div 
+          onClick={handlePageNext}
+          style={{ position: 'absolute', top: 0, right: 0, width: '12%', height: '100%', zIndex: 15, cursor: 'pointer' }}
+          title="Next Page"
+        />
+
         {/* EPUB Viewer Container */}
         {activeBook.type === 'epub' ? (
           <div
@@ -789,7 +716,7 @@ export default function ReaderPage() {
             inset: 0,
             backdropFilter: 'blur(28px)',
             WebkitBackdropFilter: 'blur(28px)',
-            background: 'rgba(15, 20, 18, 0.55)',
+            background: 'rgba(12, 16, 15, 0.65)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
@@ -800,15 +727,15 @@ export default function ReaderPage() {
         >
           <div 
             style={{ 
-              width: 'min(92vw, 460px)',
-              maxHeight: '90vh',
+              width: 'min(92vw, 480px)',
+              maxHeight: '88vh',
               overflowY: 'auto',
               borderRadius: '24px', 
-              background: 'rgba(255, 255, 255, 0.94)', 
+              background: 'rgba(255, 255, 255, 0.95)', 
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.8)',
-              boxShadow: '0 30px 70px -15px rgba(0,0,0,0.3)',
+              boxShadow: '0 30px 70px -15px rgba(0,0,0,0.35)',
               padding: '24px',
               boxSizing: 'border-box'
             }}
@@ -822,10 +749,10 @@ export default function ReaderPage() {
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1C2321', fontFamily: fontCatalog[readerFont]?.family }}>
-                    Typography & Canvas
+                    Typography & Atmosphere
                   </h3>
                   <span style={{ fontSize: '12px', color: 'rgba(28,35,33,0.5)', fontWeight: 500 }}>
-                    Craft your reading environment
+                    Craft your personal reading experience
                   </span>
                 </div>
               </div>
@@ -837,7 +764,7 @@ export default function ReaderPage() {
               </button>
             </div>
             
-            {/* Section 1: Font Size Slider (0% - 100%) */}
+            {/* Section 1: Font Size Slider (0px to 100px) */}
             <div style={{ marginBottom: '24px', background: 'rgba(28,35,33,0.03)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -847,19 +774,16 @@ export default function ReaderPage() {
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 700, background: '#1C2321', color: 'white', padding: '2px 8px', borderRadius: '12px' }}>
-                    {fontSizePercent}%
-                  </span>
-                  <span style={{ fontSize: '12px', color: 'rgba(28,35,33,0.5)', fontWeight: 500 }}>
-                    ({calculatedPxSize}px)
+                  <span style={{ fontSize: '13px', fontWeight: 700, background: '#1C2321', color: 'white', padding: '3px 10px', borderRadius: '12px' }}>
+                    {fontSizePx}px
                   </span>
                 </div>
               </div>
 
-              {/* Slider Track */}
+              {/* Slider Track (0px to 100px) */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <button 
-                  onClick={() => updateSetting('size', Math.max(0, fontSizePercent - 5), setFontSizePercent)}
+                  onClick={() => updateSetting('sizepx', Math.max(0, fontSizePx - 2), setFontSizePx)}
                   style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'white', border: '1px solid rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#1C2321' }}
                 >
                   <Minus size={14} />
@@ -868,12 +792,12 @@ export default function ReaderPage() {
                   type="range"
                   min="0"
                   max="100"
-                  value={fontSizePercent}
-                  onChange={(e) => updateSetting('size', Number(e.target.value), setFontSizePercent)}
+                  value={fontSizePx}
+                  onChange={(e) => updateSetting('sizepx', Number(e.target.value), setFontSizePx)}
                   style={{ flex: 1, height: '6px', borderRadius: '3px', accentColor: '#1C2321', cursor: 'pointer' }}
                 />
                 <button 
-                  onClick={() => updateSetting('size', Math.min(100, fontSizePercent + 5), setFontSizePercent)}
+                  onClick={() => updateSetting('sizepx', Math.min(100, fontSizePx + 2), setFontSizePx)}
                   style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'white', border: '1px solid rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#1C2321' }}
                 >
                   <Plus size={14} />
@@ -881,12 +805,12 @@ export default function ReaderPage() {
               </div>
             </div>
 
-            {/* Section 2: Typeface Selector Grid */}
+            {/* Section 2: Typeface Selector Grid (Expanded Google Fonts) */}
             <div style={{ marginBottom: '24px' }}>
               <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(28,35,33,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '12px' }}>
-                Typeface Collection
+                Expanded Typeface Collection
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
                 {Object.entries(fontCatalog).map(([key, item]) => {
                   const isSelected = readerFont === key;
                   return (
@@ -894,21 +818,21 @@ export default function ReaderPage() {
                       key={key}
                       onClick={() => updateSetting('font', key, setReaderFont)}
                       style={{
-                        padding: '12px 14px',
-                        borderRadius: '14px',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
                         border: isSelected ? '2px solid #1C2321' : '1px solid rgba(0,0,0,0.08)',
-                        background: isSelected ? '#1C2321' : 'rgba(255,255,255,0.7)',
+                        background: isSelected ? '#1C2321' : 'rgba(255,255,255,0.75)',
                         color: isSelected ? '#FFFFFF' : '#1C2321',
                         cursor: 'pointer',
                         textAlign: 'left',
-                        transition: 'all 0.2s ease',
+                        transition: 'all 0.15s ease',
                         boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
                       }}
                     >
-                      <div style={{ fontSize: '14px', fontWeight: 600, fontFamily: item.family, marginBottom: '2px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, fontFamily: item.family, marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {item.name}
                       </div>
-                      <div style={{ fontSize: '10px', opacity: isSelected ? 0.7 : 0.4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <div style={{ fontSize: '9px', opacity: isSelected ? 0.7 : 0.45, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {item.category}
                       </div>
                     </button>
@@ -917,7 +841,7 @@ export default function ReaderPage() {
               </div>
             </div>
 
-            {/* Section 3: Line Height Spacing */}
+            {/* Section 3: Line Spacing */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                 <AlignLeft size={16} style={{ color: 'rgba(28,35,33,0.6)' }} />
@@ -956,12 +880,12 @@ export default function ReaderPage() {
               </div>
             </div>
 
-            {/* Section 4: Canvas Theme Tones */}
+            {/* Section 4: Canvas Theme Tones & OLED Pitch Dark */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
                 <Feather size={16} style={{ color: 'rgba(28,35,33,0.6)' }} />
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(28,35,33,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Canvas Atmosphere
+                  Atmosphere Tone
                 </label>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
@@ -999,7 +923,7 @@ export default function ReaderPage() {
                 onClick={() => {
                   updateSetting('theme', 'canvas', setReaderTheme);
                   updateSetting('font', 'garamond', setReaderFont);
-                  updateSetting('size', 50, setFontSizePercent);
+                  updateSetting('sizepx', 18, setFontSizePx);
                   updateSetting('lineheight', 1.75, setLineHeight);
                 }} 
                 style={{ 
