@@ -20,7 +20,7 @@ export default function ReaderPage() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Settings State
+  // Reader Settings
   const [readerTheme, setReaderTheme] = useState('canvas'); // 'canvas', 'dark', 'white'
   const [readerFont, setReaderFont] = useState('serif'); // 'serif', 'sans'
 
@@ -35,14 +35,14 @@ export default function ReaderPage() {
     sans: 'var(--font-sans), system-ui, sans-serif'
   };
 
-  // PDF states
+  // PDF reader state
   const [pdfDoc, setPdfDoc] = useState(null);
   const [pdfCurrentPage, setPdfCurrentPage] = useState(1);
   const [currentPageCanvas, setCurrentPageCanvas] = useState(null);
   const [pageDimensions, setPageDimensions] = useState({ width: 540, height: 720 });
   const [textItems, setTextItems] = useState([]);
 
-  // Selection state
+  // Selection / AI Context state
   const [selectedWord, setSelectedWord] = useState('');
   const [selectionRect, setSelectionRect] = useState(null);
   const [selectionContext, setSelectionContext] = useState('');
@@ -65,19 +65,24 @@ export default function ReaderPage() {
     setSelectionRect(null);
   };
 
-  // Initialize Book Reader
+  // Load Book Data & Mount EPUB/PDF Reader
   useEffect(() => {
     if (!id) return;
+
+    let mounted = true;
 
     const initBook = async () => {
       try {
         const decodedId = decodeURIComponent(id);
         const record = await getBookData(decodedId);
-        if (!record) {
-          alert('Book not found in library.');
-          router.push('/');
+        if (!record || !mounted) {
+          if (!record) {
+            alert('Book not found in library.');
+            router.push('/');
+          }
           return;
         }
+
         setActiveBook(record);
         if (record.progressPercent) {
           setProgressPercent(record.progressPercent);
@@ -85,12 +90,12 @@ export default function ReaderPage() {
 
         if (record.type === 'epub') {
           setTimeout(async () => {
+            if (!viewerRef.current || !mounted) return;
+
             const { default: ePub } = await import('epubjs');
             const book = ePub(record.data);
 
-            if (!viewerRef.current) return;
-
-            // Configure EPUB Rendition for perfect book layout across screen sizes
+            // Clean EPUB Rendition
             const rend = book.renderTo(viewerRef.current, {
               width: '100%',
               height: '100%',
@@ -105,29 +110,29 @@ export default function ReaderPage() {
             rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
             rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
 
-            // Apply default typography & padding rules
+            // Apply Typography & Padding
             rend.themes.default({
               "body": {
-                "padding": "5% 8% !important",
+                "padding": "6% 8% !important",
                 "font-family": `${fontFamilies[readerFont]} !important`,
-                "line-height": "1.75 !important"
+                "line-height": "1.8 !important",
+                "-webkit-font-smoothing": "antialiased"
               },
               "p": {
                 "font-size": "1.125rem !important",
-                "line-height": "1.8 !important",
-                "margin-bottom": "1em !important"
+                "margin-bottom": "1.25em !important"
               },
               "img, svg": {
                 "max-width": "100% !important",
-                "max-height": "80vh !important",
+                "max-height": "75vh !important",
                 "object-fit": "contain !important"
               }
             });
 
-            // Handle word selection & tap lookup inside EPUB iframe
+            // 500ms Touch-Press & Selection Listener for AI Context Search
             rend.on('selected', (cfiRange, contents) => {
               if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
-              
+
               selectionTimeoutRef.current = setTimeout(async () => {
                 try {
                   const range = await rend.book.getRange(cfiRange);
@@ -140,15 +145,17 @@ export default function ReaderPage() {
                   }
 
                   const rect = range.getBoundingClientRect();
-                  const iframeRect = contents.document.defaultView.frameElement.getBoundingClientRect();
+                  const iframeElement = contents.document.defaultView.frameElement;
+                  const iframeRect = iframeElement.getBoundingClientRect();
+
                   const absoluteX = rect.left + iframeRect.left;
                   const absoluteY = rect.top + iframeRect.top;
 
                   triggerAiDictionary(word, contextText, absoluteX, absoluteY, rect.width, rect.height);
                 } catch (e) {
-                  console.error('Selection resolution error:', e);
+                  console.error('Error resolving selected text:', e);
                 }
-              }, 300);
+              }, 500);
             });
 
             rend.on('click', () => {
@@ -156,14 +163,14 @@ export default function ReaderPage() {
               closeAiDictionary();
             });
 
-            // Display initial or saved location
+            // Display Saved or Initial Location
             if (record.lastLocation) {
               await rend.display(record.lastLocation);
             } else {
               await rend.display();
             }
 
-            // Track location relocation for progression system
+            // Progression Relocation Tracking
             rend.on('relocated', (location) => {
               closeAiDictionary();
               if (location && location.start) {
@@ -174,43 +181,52 @@ export default function ReaderPage() {
               }
             });
 
-            // Window resize handler for responsive layout
-            const handleResize = () => {
-              if (renditionRef.current) {
-                renditionRef.current.resize('100%', '100%');
-              }
-            };
-            window.addEventListener('resize', handleResize, { passive: true });
-
           }, 100);
         } else if (record.type === 'pdf') {
           const doc = await loadPDF(record.data);
+          if (!mounted) return;
           setPdfDoc(doc);
           const startPage = typeof record.lastLocation === 'number' ? record.lastLocation : 1;
           await loadPDFPage(doc, startPage, decodedId);
         }
       } catch (err) {
-        console.error('Failed to load book', err);
+        console.error('Error initializing reader:', err);
       }
     };
 
     initBook();
+
+    return () => {
+      mounted = false;
+      if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
+    };
   }, [id, router]);
 
-  // Handle Theme & Font updates
+  // Handle Theme & Font Settings Changes
   useEffect(() => {
     if (renditionRef.current) {
       renditionRef.current.themes.select(readerTheme);
       renditionRef.current.themes.default({
         "body": {
           "font-family": `${fontFamilies[readerFont]} !important`,
-          "padding": "5% 8% !important"
+          "padding": "6% 8% !important"
         }
       });
     }
   }, [readerTheme, readerFont]);
 
-  // Keyboard navigation (Left / Right arrow keys)
+  // Window Resize Listener for Responsive Layout
+  useEffect(() => {
+    const handleResize = () => {
+      if (renditionRef.current) {
+        renditionRef.current.resize('100%', '100%');
+      }
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Keyboard Arrow Navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft') {
@@ -350,7 +366,7 @@ export default function ReaderPage() {
         </div>
       </div>
 
-      {/* Navigation Floating Buttons */}
+      {/* Floating Action Buttons */}
       <button 
         onClick={() => router.push('/')}
         style={{ ...dynamicFabStyle, top: '20px', left: '20px' }}
@@ -389,11 +405,11 @@ export default function ReaderPage() {
         <ChevronRight size={22} />
       </button>
 
-      {/* Book Canvas Container - Responsive centered book layout */}
+      {/* Responsive Book Canvas Box with Border & Soft Shadow */}
       <div 
         style={{
-          width: 'min(92vw, 1100px)',
-          height: 'min(86vh, 850px)',
+          width: 'min(92vw, 1050px)',
+          height: 'min(85vh, 830px)',
           margin: '0 auto',
           position: 'relative',
           borderRadius: '16px',
