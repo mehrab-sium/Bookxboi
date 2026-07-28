@@ -6,9 +6,11 @@ export default function Footer() {
   const [copied, setCopied] = useState(false);
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText('mehrabsium@gmail.com');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText('mehrabsium@gmail.com');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
   };
 
   return (
@@ -91,7 +93,7 @@ export default function Footer() {
 
       {/* Footer Bottom Bar */}
       <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-[#F5F2EB]/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#F5F2EB]/40">
-        <p>© {new Date().getFullYear()} Book × Boi. Crafted with precision by Mehrab Sium.</p>
+        <p>© 2026 Book × Boi. Crafted with precision by Mehrab Sium.</p>
         <p className="tracking-widest uppercase text-[10px]">All Rights Reserved</p>
       </div>
     </footer>
