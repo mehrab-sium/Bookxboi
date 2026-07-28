@@ -74,29 +74,43 @@ export default function HeroLanding({ setView }) {
       ref={containerRef} 
       className="relative w-full h-[150vh] overflow-hidden"
     >
-      {/* 1. Global Canvas & Background Fix - Whole Photo View on 19:6 & Widescreen, Percentage Scaling across Devices */}
-      <div className="fixed inset-0 w-full h-full -z-50 overflow-hidden select-none pointer-events-none">
+      {/* 1. Global Canvas & Full Un-cropped Background Photo */}
+      <div className="fixed inset-0 w-full h-full -z-50 bg-[#0a0c0b] flex items-center justify-center overflow-hidden select-none pointer-events-none">
+        {/* Ambient Blurred Background Bleed to Fill Screen Edges on 19:6 / Ultra-wides Widescreens */}
         <Image 
-          src="/fast-load-book-x-boi.jpg"
-          alt="Book X Boi Hero Background"
+          src="/fast-load-book-x-boi.jpg?v=2"
+          alt=""
           fill
           priority
-          sizes="100vw"
-          quality={95}
-          className="object-cover object-[65%_50%] sm:object-[70%_50%] md:object-[75%_50%] lg:object-center w-full h-full transition-all duration-700 ease-out"
+          quality={25}
+          className="object-cover opacity-40 blur-3xl scale-110 pointer-events-none"
         />
-        {/* Lightweight Cinematic Vignette Scrim - Ensures full photo remains completely visible */}
+        
+        {/* Main 100% Uncropped Whole Photo Container */}
+        <div className="relative w-full h-full max-w-[100vw] max-h-[100vh] flex items-center justify-center">
+          <Image 
+            src="/fast-load-book-x-boi.jpg?v=2"
+            alt="Book X Boi Hero Background"
+            fill
+            priority
+            sizes="100vw"
+            quality={95}
+            className="object-contain w-full h-full transition-all duration-700 ease-out"
+          />
+        </div>
+
+        {/* Lightweight Vignette Scrim - Ensures full photo remains visible while providing crisp text contrast */}
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse at center, rgba(17, 20, 19, 0.25) 0%, rgba(17, 20, 19, 0.45) 75%, rgba(17, 20, 19, 0.75) 100%)"
+            background: "radial-gradient(ellipse at 35% 50%, rgba(10, 12, 11, 0.6) 0%, rgba(10, 12, 11, 0.25) 55%, rgba(10, 12, 11, 0.65) 100%)"
           }}
         />
         {/* Soft edge gradient for header & footer readability */}
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(to bottom, rgba(11, 14, 13, 0.6) 0%, transparent 25%, transparent 75%, rgba(11, 14, 13, 0.7) 100%)"
+            background: "linear-gradient(to bottom, rgba(10, 12, 11, 0.5) 0%, transparent 20%, transparent 80%, rgba(10, 12, 11, 0.6) 100%)"
           }}
         />
       </div>
@@ -126,8 +140,8 @@ export default function HeroLanding({ setView }) {
             </h1>
           </div>
 
-          <div className="reveal-text mt-8 lg:mt-16 max-w-sm p-6 rounded-2xl backdrop-blur-md bg-[#111413]/40 border border-[#F5F2EB]/15 shadow-2xl relative z-30">
-            <p className="text-core text-sm leading-relaxed text-[#F5F2EB] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+          <div className="reveal-text mt-8 lg:mt-16 max-w-sm p-6 rounded-2xl backdrop-blur-md bg-[#0a0c0b]/50 border border-[#F5F2EB]/15 shadow-2xl relative z-30">
+            <p className="text-core text-sm leading-relaxed text-[#F5F2EB] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] font-normal">
               A bespoke digital reading experience. Hyper-premium, editorial-grade architecture designed for deep focus and aesthetic immersion.
             </p>
             
