@@ -16,11 +16,12 @@ export default function ReaderPage() {
   const [progressPercent, setProgressPercent] = useState(0);
   const viewerRef = useRef(null);
   const renditionRef = useRef(null);
+  const bookRef = useRef(null);
   const selectionTimeoutRef = useRef(null);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Reader Settings
+  // Settings State
   const [readerTheme, setReaderTheme] = useState('canvas'); // 'canvas', 'dark', 'white'
   const [readerFont, setReaderFont] = useState('serif'); // 'serif', 'sans'
 
@@ -31,18 +32,18 @@ export default function ReaderPage() {
   };
 
   const fontFamilies = {
-    serif: 'Ogg, Georgia, "Times New Roman", serif',
+    serif: 'Georgia, Ogg, "Times New Roman", serif',
     sans: 'var(--font-sans), system-ui, sans-serif'
   };
 
-  // PDF reader state
+  // PDF Reader State
   const [pdfDoc, setPdfDoc] = useState(null);
   const [pdfCurrentPage, setPdfCurrentPage] = useState(1);
   const [currentPageCanvas, setCurrentPageCanvas] = useState(null);
   const [pageDimensions, setPageDimensions] = useState({ width: 540, height: 720 });
   const [textItems, setTextItems] = useState([]);
 
-  // Selection / AI Context state
+  // AI Dictionary Selection State
   const [selectedWord, setSelectedWord] = useState('');
   const [selectionRect, setSelectionRect] = useState(null);
   const [selectionContext, setSelectionContext] = useState('');
@@ -65,17 +66,18 @@ export default function ReaderPage() {
     setSelectionRect(null);
   };
 
-  // Load Book Data & Mount EPUB/PDF Reader
+  // Mount EPUB & PDF Readers cleanly from First Principles
   useEffect(() => {
     if (!id) return;
 
-    let mounted = true;
+    let isSubscribed = true;
 
     const initBook = async () => {
       try {
         const decodedId = decodeURIComponent(id);
         const record = await getBookData(decodedId);
-        if (!record || !mounted) {
+
+        if (!record || !isSubscribed) {
           if (!record) {
             alert('Book not found in library.');
             router.push('/');
@@ -90,17 +92,23 @@ export default function ReaderPage() {
 
         if (record.type === 'epub') {
           setTimeout(async () => {
-            if (!viewerRef.current || !mounted) return;
+            if (!viewerRef.current || !isSubscribed) return;
 
             const { default: ePub } = await import('epubjs');
             const book = ePub(record.data);
+            bookRef.current = book;
 
-            // Clean EPUB Rendition
+            await book.ready;
+
+            // Generate location index for accurate progression calculations across chapters
+            book.locations.generate(1000).catch((e) => console.warn('Locations generation notice:', e));
+
+            // Initialize Rendition
             const rend = book.renderTo(viewerRef.current, {
               width: '100%',
               height: '100%',
               flow: 'paginated',
-              spread: 'auto'
+              manager: 'default'
             });
 
             renditionRef.current = rend;
@@ -110,17 +118,16 @@ export default function ReaderPage() {
             rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
             rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
 
-            // Apply Typography & Padding
+            // Apply Default Typography & Clean Viewport Margins
             rend.themes.default({
               "body": {
-                "padding": "6% 8% !important",
+                "padding": "4% 6% !important",
                 "font-family": `${fontFamilies[readerFont]} !important`,
-                "line-height": "1.8 !important",
-                "-webkit-font-smoothing": "antialiased"
+                "line-height": "1.75 !important"
               },
               "p": {
-                "font-size": "1.125rem !important",
-                "margin-bottom": "1.25em !important"
+                "font-size": "1.1rem !important",
+                "margin-bottom": "1.1em !important"
               },
               "img, svg": {
                 "max-width": "100% !important",
@@ -129,7 +136,7 @@ export default function ReaderPage() {
               }
             });
 
-            // 500ms Touch-Press & Selection Listener for AI Context Search
+            // Handle Text Selection / Tap for Context AI Dictionary Lookup
             rend.on('selected', (cfiRange, contents) => {
               if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
 
@@ -145,17 +152,16 @@ export default function ReaderPage() {
                   }
 
                   const rect = range.getBoundingClientRect();
-                  const iframeElement = contents.document.defaultView.frameElement;
-                  const iframeRect = iframeElement.getBoundingClientRect();
+                  const iframeRect = contents.document.defaultView.frameElement.getBoundingClientRect();
 
                   const absoluteX = rect.left + iframeRect.left;
                   const absoluteY = rect.top + iframeRect.top;
 
                   triggerAiDictionary(word, contextText, absoluteX, absoluteY, rect.width, rect.height);
-                } catch (e) {
-                  console.error('Error resolving selected text:', e);
+                } catch (err) {
+                  console.error('Error resolving text selection:', err);
                 }
-              }, 500);
+              }, 400);
             });
 
             rend.on('click', () => {
@@ -163,19 +169,26 @@ export default function ReaderPage() {
               closeAiDictionary();
             });
 
-            // Display Saved or Initial Location
+            // Display initial saved CFI location or start of book
             if (record.lastLocation) {
               await rend.display(record.lastLocation);
             } else {
               await rend.display();
             }
 
-            // Progression Relocation Tracking
+            // Track location relocation for persistent progression
             rend.on('relocated', (location) => {
               closeAiDictionary();
               if (location && location.start) {
                 const cfi = location.start.cfi;
-                const pct = Math.round((location.start.percentage || 0) * 100);
+                let pct = 0;
+                if (book.locations && book.locations.total > 0) {
+                  pct = Math.round((book.locations.percentageFromCfi(cfi) || 0) * 100);
+                } else if (location.start.percentage !== undefined) {
+                  pct = Math.round((location.start.percentage || 0) * 100);
+                }
+
+                pct = Math.min(100, Math.max(0, pct));
                 setProgressPercent(pct);
                 updateReadingProgress(decodedId, pct, cfi);
               }
@@ -184,32 +197,32 @@ export default function ReaderPage() {
           }, 100);
         } else if (record.type === 'pdf') {
           const doc = await loadPDF(record.data);
-          if (!mounted) return;
+          if (!isSubscribed) return;
           setPdfDoc(doc);
           const startPage = typeof record.lastLocation === 'number' ? record.lastLocation : 1;
           await loadPDFPage(doc, startPage, decodedId);
         }
       } catch (err) {
-        console.error('Error initializing reader:', err);
+        console.error('Error opening reader:', err);
       }
     };
 
     initBook();
 
     return () => {
-      mounted = false;
+      isSubscribed = false;
       if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
     };
   }, [id, router]);
 
-  // Handle Theme & Font Settings Changes
+  // Apply Theme & Font updates dynamically
   useEffect(() => {
     if (renditionRef.current) {
       renditionRef.current.themes.select(readerTheme);
       renditionRef.current.themes.default({
         "body": {
           "font-family": `${fontFamilies[readerFont]} !important`,
-          "padding": "6% 8% !important"
+          "padding": "4% 6% !important"
         }
       });
     }
@@ -318,7 +331,7 @@ export default function ReaderPage() {
   return (
     <div style={{ height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden', background: currentColors.background, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       
-      {/* Top Reading Progress Indicator Badge & Micro Line */}
+      {/* Top Reading Progress Badge & Micro Indicator Line */}
       <div style={{
         position: 'absolute',
         top: '20px',
@@ -405,7 +418,7 @@ export default function ReaderPage() {
         <ChevronRight size={22} />
       </button>
 
-      {/* Responsive Book Canvas Box with Border & Soft Shadow */}
+      {/* Responsive Book Canvas Frame with Border & Soft Shadow */}
       <div 
         style={{
           width: 'min(92vw, 1050px)',
