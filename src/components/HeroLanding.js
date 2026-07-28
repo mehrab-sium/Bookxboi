@@ -3,6 +3,7 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Image from 'next/image';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -73,15 +74,32 @@ export default function HeroLanding({ setView }) {
       ref={containerRef} 
       className="relative w-full h-[150vh] overflow-hidden"
     >
-      {/* 1. Global Canvas & Background Fix */}
-      <div 
-        className="fixed inset-0 w-full h-full -z-50"
-        style={{
-          backgroundSize: 'cover',
-          backgroundPosition: 'right center',
-          backgroundImage: "linear-gradient(to right, rgba(17, 20, 19, 1) 0%, rgba(17, 20, 19, 0.9) 50%, rgba(17, 20, 19, 0) 100%), url('/landing-bg.png')"
-        }}
-      />
+      {/* 1. Global Canvas & Background Fix - Fully Responsive for Mobile & Desktop */}
+      <div className="fixed inset-0 w-full h-full -z-50 overflow-hidden select-none pointer-events-none">
+        <Image 
+          src="/fast-load-book-x-boi.jpg"
+          alt="Book X Boi Hero Background"
+          fill
+          priority
+          sizes="100vw"
+          quality={90}
+          className="object-cover object-[75%_center] sm:object-[80%_center] md:object-[85%_center] lg:object-right-center transition-all duration-700 ease-out"
+        />
+        {/* Desktop Gradient Overlay: Smooth fade from dark left panel to vivid right artwork */}
+        <div 
+          className="absolute inset-0 hidden md:block pointer-events-none"
+          style={{
+            background: "linear-gradient(to right, rgba(17, 20, 19, 0.98) 0%, rgba(17, 20, 19, 0.88) 38%, rgba(17, 20, 19, 0.4) 70%, rgba(17, 20, 19, 0.05) 100%)"
+          }}
+        />
+        {/* Mobile & Smartphone Gradient Overlay: Rich vertical contrast for portrait viewports */}
+        <div 
+          className="absolute inset-0 block md:hidden pointer-events-none"
+          style={{
+            background: "linear-gradient(to bottom, rgba(17, 20, 19, 0.95) 0%, rgba(17, 20, 19, 0.75) 50%, rgba(17, 20, 19, 0.92) 100%)"
+          }}
+        />
+      </div>
 
       <div className="sticky top-0 w-full h-screen flex flex-col lg:flex-row items-center justify-between px-6 lg:px-12 py-24 gap-12 overflow-hidden pointer-events-none">
         

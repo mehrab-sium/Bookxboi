@@ -48,7 +48,7 @@ export default function Home() {
       <GlobalHeader setView={handleSetView} />
       
       {/* Global Particle System */}
-      <ParticleSystem />
+      {(view === 'landing' || view === 'transitioning') && <ParticleSystem />}
       
       {(view === 'landing' || view === 'transitioning') && (
         <div className="hero-transition-wrapper">
