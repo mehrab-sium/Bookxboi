@@ -7,6 +7,8 @@ import GlobalHeader from '../components/GlobalHeader';
 import HeroLanding from '../components/HeroLanding';
 import ParticleSystem from '../components/ParticleSystem';
 
+import Footer from '../components/Footer';
+
 const ReaderApp = dynamic(() => import('../components/ReaderApp'), { ssr: false });
 
 export default function Home() {
@@ -53,12 +55,7 @@ export default function Home() {
       {(view === 'landing' || view === 'transitioning') && (
         <div className="hero-transition-wrapper">
           <HeroLanding setView={handleSetView} />
-          {/* Scroll buffer to allow scroll-driven animations to run */}
-          <div className="h-screen bg-[#F5F2EB] border-t border-contrast-midnight/10 flex items-center justify-center">
-            <p className="text-core text-contrast-midnight/40 tracking-widest uppercase text-xs">
-              End of Layout Demonstration
-            </p>
-          </div>
+          <Footer />
         </div>
       )}
 

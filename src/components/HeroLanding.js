@@ -74,43 +74,43 @@ export default function HeroLanding({ setView }) {
       ref={containerRef} 
       className="relative w-full h-[150vh] overflow-hidden"
     >
-      {/* 1. Global Canvas & Full Un-cropped Background Photo */}
-      <div className="fixed inset-0 w-full h-full -z-50 bg-[#0a0c0b] flex items-center justify-center overflow-hidden select-none pointer-events-none">
-        {/* Ambient Blurred Background Bleed to Fill Screen Edges on 19:6 / Ultra-wides Widescreens */}
+      {/* 1. Global Responsive Canvas Backgrounds */}
+      {/* Desktop & Widescreen Background (Hidden on Mobile) */}
+      <div className="fixed inset-0 w-full h-full -z-50 hidden md:block overflow-hidden select-none pointer-events-none">
         <Image 
-          src="/fast-load-book-x-boi.jpg?v=2"
-          alt=""
+          src="/new-16-9.webp"
+          alt="Book X Boi Desktop Background"
           fill
           priority
-          quality={25}
-          className="object-cover opacity-40 blur-3xl scale-110 pointer-events-none"
+          sizes="100vw"
+          quality={95}
+          className="object-cover object-center w-full h-full"
         />
-        
-        {/* Main 100% Uncropped Whole Photo Container */}
-        <div className="relative w-full h-full max-w-[100vw] max-h-[100vh] flex items-center justify-center">
-          <Image 
-            src="/fast-load-book-x-boi.jpg?v=2"
-            alt="Book X Boi Hero Background"
-            fill
-            priority
-            sizes="100vw"
-            quality={95}
-            className="object-contain w-full h-full transition-all duration-700 ease-out"
-          />
-        </div>
-
-        {/* Lightweight Vignette Scrim - Ensures full photo remains visible while providing crisp text contrast */}
+        {/* Subtle Vignette Scrim for Desktop */}
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse at 35% 50%, rgba(10, 12, 11, 0.6) 0%, rgba(10, 12, 11, 0.25) 55%, rgba(10, 12, 11, 0.65) 100%)"
+            background: "radial-gradient(ellipse at 35% 50%, rgba(10, 12, 11, 0.45) 0%, rgba(10, 12, 11, 0.2) 60%, rgba(10, 12, 11, 0.55) 100%)"
           }}
         />
-        {/* Soft edge gradient for header & footer readability */}
+      </div>
+
+      {/* Mobile & 9:16 Phone Background (Hidden on Desktop) */}
+      <div className="fixed inset-0 w-full h-full -z-50 block md:hidden overflow-hidden select-none pointer-events-none">
+        <Image 
+          src="/for-phone.webp"
+          alt="Book X Boi Phone Background"
+          fill
+          priority
+          sizes="100vw"
+          quality={95}
+          className="object-cover object-center w-full h-full"
+        />
+        {/* Mobile Scrim Gradient */}
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(to bottom, rgba(10, 12, 11, 0.5) 0%, transparent 20%, transparent 80%, rgba(10, 12, 11, 0.6) 100%)"
+            background: "linear-gradient(to bottom, rgba(10, 12, 11, 0.4) 0%, rgba(10, 12, 11, 0.2) 50%, rgba(10, 12, 11, 0.65) 100%)"
           }}
         />
       </div>
