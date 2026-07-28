@@ -45,8 +45,8 @@ export default function GlobalHeader({ setView }) {
   useEffect(() => {
     // Only run on client
     if (typeof window === 'undefined') return;
-    
-    // Removed sessionStorage check so it runs every time the landing page reloads
+    if (!crossRef.current || !logoLeftRef.current || !logoRightRef.current || !curtainRef.current) return;
+
     document.body.style.overflow = 'hidden';
     
     // Calculate vertical distance from center to header
@@ -80,6 +80,10 @@ export default function GlobalHeader({ setView }) {
       .to('.nav-middle', { y: 0, opacity: 1, ease: 'power2.out', duration: 1 }, "-=0.9")
       .to('.nav-outer', { y: 0, opacity: 1, ease: 'power2.out', duration: 1 }, "-=0.8");
 
+    return () => {
+      document.body.style.overflow = '';
+      if (tl) tl.kill();
+    };
   }, []);
 
   // GSAP About Overlay Animation

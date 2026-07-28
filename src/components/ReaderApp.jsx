@@ -54,7 +54,7 @@ export default function ReaderApp() {
   }, []);
 
   // GSAP ScrollTrigger Entrance & Cascade Animations
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (booksLoaded && containerRef.current) {
       let ctx = gsap.context(() => {
         gsap.fromTo('.archive-header-anim',
