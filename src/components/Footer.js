@@ -31,7 +31,7 @@ export default function Footer() {
           </h2>
 
           <p className="text-sm text-[#F5F2EB]/70 leading-relaxed font-sans">
-            Crafting hyper-premium editorial reading platforms and bespoke digital literature experiences. Designed for deep focus, aesthetic immersion, and typographical perfection.
+            Crafting hyper-premium editorial reading platforms and bespoke digital literature experiences.
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             {/* Facebook Button */}
             <a
-              href="http://fb.me/sium.mehrab"
+              href="https://www.facebook.com/sium.mehrab"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 sm:flex-initial flex items-center justify-center gap-3 px-6 py-3.5 rounded-full backdrop-blur-md bg-white/5 border border-white/15 text-xs uppercase tracking-widest text-[#F5F2EB] hover:bg-[#d4af37] hover:text-[#0a0c0b] hover:border-[#d4af37] transition-all duration-300 shadow-lg group"
