@@ -37,14 +37,14 @@ export default function ReaderPage() {
     sans: 'var(--font-sans), system-ui, sans-serif'
   };
 
-  // PDF Reader state
+  // PDF Reader State
   const [pdfDoc, setPdfDoc] = useState(null);
   const [pdfCurrentPage, setPdfCurrentPage] = useState(1);
   const [currentPageCanvas, setCurrentPageCanvas] = useState(null);
   const [pageDimensions, setPageDimensions] = useState({ width: 540, height: 720 });
   const [textItems, setTextItems] = useState([]);
 
-  // Selection / AI Context state
+  // Selection / AI Context State
   const [selectedWord, setSelectedWord] = useState('');
   const [selectionRect, setSelectionRect] = useState(null);
   const [selectionContext, setSelectionContext] = useState('');
@@ -67,7 +67,7 @@ export default function ReaderPage() {
     setSelectionRect(null);
   };
 
-  // Initialize Reader from scratch
+  // Initialize EPUB & PDF Readers
   useEffect(() => {
     if (!id) return;
 
@@ -101,34 +101,37 @@ export default function ReaderPage() {
 
             await book.ready;
 
-            // Generate location index for accurate progression calculations
+            // Location index generation
             book.locations.generate(1000).catch(() => {});
 
-            // Initialize Rendition with paginated flow
+            // Initialize Rendition with manager: 'continuous' and flow: 'paginated'
+            // This prevents iframe DOM column collapse and blank page glitches
             const rend = book.renderTo(viewerRef.current, {
               width: '100%',
               height: '100%',
               flow: 'paginated',
-              manager: 'default'
+              manager: 'continuous',
+              spread: 'none'
             });
 
             renditionRef.current = rend;
 
-            // Apply Themes
+            // Apply Themes with clean margin resets inside iframe
             rend.themes.register('canvas', { "body": { "background": "#FAF8F5 !important", "color": "#1C2321 !important" } });
             rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
             rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
 
-            // Apply Typography
+            // Zero iframe body padding to prevent EPUB.js column transform calculation failures
             rend.themes.default({
-              "body": {
-                "padding": "4% 6% !important",
+              "html, body": {
+                "margin": "0 !important",
+                "padding": "0 !important",
+                "height": "100% !important",
+                "box-sizing": "border-box !important"
+              },
+              "p, div, span, blockquote": {
                 "font-family": `${fontFamilies[readerFont]} !important`,
                 "line-height": "1.75 !important"
-              },
-              "p": {
-                "font-size": "1.1rem !important",
-                "margin-bottom": "1.1em !important"
               },
               "img, svg": {
                 "max-width": "100% !important",
@@ -225,9 +228,12 @@ export default function ReaderPage() {
     if (renditionRef.current) {
       renditionRef.current.themes.select(readerTheme);
       renditionRef.current.themes.default({
-        "body": {
-          "font-family": `${fontFamilies[readerFont]} !important`,
-          "padding": "4% 6% !important"
+        "html, body": {
+          "margin": "0 !important",
+          "padding": "0 !important"
+        },
+        "p, div, span, blockquote": {
+          "font-family": `${fontFamilies[readerFont]} !important`
         }
       });
     }
@@ -278,19 +284,9 @@ export default function ReaderPage() {
     }
   };
 
-  // Failproof Page Navigation across Section Boundaries
   const handlePageNext = async () => {
     closeAiDictionary();
     if (activeBook?.type === 'epub' && renditionRef.current) {
-      const loc = renditionRef.current.currentLocation();
-      if (loc && loc.atEnd && bookRef.current) {
-        const nextSectionIndex = (loc.start?.index || 0) + 1;
-        const nextSection = bookRef.current.spine.get(nextSectionIndex);
-        if (nextSection) {
-          await renditionRef.current.display(nextSection.href);
-          return;
-        }
-      }
       renditionRef.current.next();
     } else if (activeBook?.type === 'pdf' && pdfDoc) {
       if (pdfCurrentPage < pdfDoc.numPages) {
@@ -302,17 +298,6 @@ export default function ReaderPage() {
   const handlePagePrev = async () => {
     closeAiDictionary();
     if (activeBook?.type === 'epub' && renditionRef.current) {
-      const loc = renditionRef.current.currentLocation();
-      if (loc && loc.atStart && bookRef.current) {
-        const prevSectionIndex = (loc.start?.index || 0) - 1;
-        if (prevSectionIndex >= 0) {
-          const prevSection = bookRef.current.spine.get(prevSectionIndex);
-          if (prevSection) {
-            await renditionRef.current.display(prevSection.href);
-            return;
-          }
-        }
-      }
       renditionRef.current.prev();
     } else if (activeBook?.type === 'pdf' && pdfDoc) {
       if (pdfCurrentPage > 1) {
@@ -444,7 +429,7 @@ export default function ReaderPage() {
         <ChevronRight size={22} />
       </button>
 
-      {/* Responsive Book Frame Canvas */}
+      {/* Responsive Book Frame Canvas with outer padding */}
       <div 
         style={{
           width: 'min(92vw, 1050px)',
@@ -456,6 +441,8 @@ export default function ReaderPage() {
           border: `1px solid ${currentColors.border}`,
           boxShadow: '0 25px 60px -15px rgba(0,0,0,0.18)',
           overflow: 'hidden',
+          padding: '24px 32px', // Safe container padding for iframe
+          boxSizing: 'border-box',
           transition: 'background 0.3s ease, border 0.3s ease'
         }}
       >
@@ -466,8 +453,7 @@ export default function ReaderPage() {
             style={{
               height: '100%',
               width: '100%',
-              position: 'absolute',
-              inset: 0
+              position: 'relative'
             }}
           />
         ) : null}
