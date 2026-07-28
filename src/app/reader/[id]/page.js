@@ -67,7 +67,74 @@ export default function ReaderPage() {
     setSelectionRect(null);
   };
 
-  // Helper to extract 1-2 lines (~240 characters) of rich surrounding context for AI
+  // Helper to extract word and 1-2 lines surrounding context at (x, y) coordinates for Apple Pencil & Touch
+  const getWordAtPoint = (doc, x, y) => {
+    if (!doc) return null;
+
+    let range = null;
+    if (doc.caretRangeFromPoint) {
+      range = doc.caretRangeFromPoint(x, y);
+    } else if (doc.caretPositionFromPoint) {
+      const pos = doc.caretPositionFromPoint(x, y);
+      if (pos && pos.offsetNode) {
+        range = doc.createRange();
+        range.setStart(pos.offsetNode, pos.offset);
+        range.setEnd(pos.offsetNode, pos.offset);
+      }
+    }
+
+    if (!range || !range.startContainer || range.startContainer.nodeType !== 3) {
+      return null;
+    }
+
+    const textNode = range.startContainer;
+    const text = textNode.textContent;
+    const offset = range.startOffset;
+
+    if (!text || offset < 0 || offset > text.length) return null;
+
+    let start = offset;
+    while (start > 0 && /[\w\u00C0-\u024F\u0980-\u09FF'-]/.test(text[start - 1])) {
+      start--;
+    }
+
+    let end = offset;
+    while (end < text.length && /[\w\u00C0-\u024F\u0980-\u09FF'-]/.test(text[end])) {
+      end++;
+    }
+
+    const word = text.slice(start, end).trim().replace(/^['"-]+|['"-]+$/g, '');
+    if (!word || word.length < 2) return null;
+
+    const wordRange = doc.createRange();
+    wordRange.setStart(textNode, start);
+    wordRange.setEnd(textNode, end);
+
+    let parent = textNode.parentNode;
+    while (parent && parent.ownerDocument && parent !== parent.ownerDocument.body && !['P', 'DIV', 'BLOCKQUOTE', 'SECTION', 'ARTICLE', 'BODY'].includes(parent.nodeName)) {
+      parent = parent.parentNode;
+    }
+
+    let fullText = parent ? (parent.textContent || parent.innerText || '').trim() : word;
+    if (fullText.length > 280) {
+      const idx = fullText.indexOf(word);
+      if (idx !== -1) {
+        const pStart = Math.max(0, idx - 110);
+        const pEnd = Math.min(fullText.length, idx + word.length + 110);
+        fullText = (pStart > 0 ? '...' : '') + fullText.substring(pStart, pEnd).trim() + (pEnd < fullText.length ? '...' : '');
+      }
+    }
+
+    const rect = wordRange.getBoundingClientRect();
+
+    return {
+      word,
+      context: fullText || word,
+      rect
+    };
+  };
+
+  // Helper to extract 1-2 lines (~240 characters) of rich surrounding context for AI range selection
   const extractRichContext = (range, word) => {
     if (!range) return word;
     try {
@@ -169,11 +236,55 @@ export default function ReaderPage() {
               }
             });
 
-            // iOS WebKit (iPad) & Universal Document Selection Handler (500ms Trigger)
+            // Apple Pencil Hover / Touch Hold & WebKit Document Selection Handler
             rend.on('rendered', (section, view) => {
               const doc = view.document;
               if (!doc) return;
 
+              let hoverTimer = null;
+              let lastHoverX = 0;
+              let lastHoverY = 0;
+
+              const triggerPointWord = (x, y) => {
+                const result = getWordAtPoint(doc, x, y);
+                if (result) {
+                  const iframeElement = view.iframe || doc.defaultView.frameElement;
+                  const iframeRect = iframeElement ? iframeElement.getBoundingClientRect() : { left: 0, top: 0 };
+
+                  triggerAiDictionary(
+                    result.word,
+                    result.context,
+                    result.rect.left + iframeRect.left,
+                    result.rect.top + iframeRect.top,
+                    Math.max(result.rect.width, 60),
+                    Math.max(result.rect.height, 24)
+                  );
+                }
+              };
+
+              // 1. Apple Pencil Hover & Stylus Move Trigger (500ms Dwell)
+              doc.addEventListener('pointermove', (e) => {
+                const dist = Math.hypot(e.clientX - lastHoverX, e.clientY - lastHoverY);
+                if (dist > 10) {
+                  lastHoverX = e.clientX;
+                  lastHoverY = e.clientY;
+                  if (hoverTimer) clearTimeout(hoverTimer);
+
+                  hoverTimer = setTimeout(() => {
+                    triggerPointWord(e.clientX, e.clientY);
+                  }, 500);
+                }
+              }, { passive: true });
+
+              // 2. Apple Pencil / Touch Hold & Tap Trigger (500ms Hold)
+              doc.addEventListener('pointerdown', (e) => {
+                if (hoverTimer) clearTimeout(hoverTimer);
+                hoverTimer = setTimeout(() => {
+                  triggerPointWord(e.clientX, e.clientY);
+                }, 500);
+              }, { passive: true });
+
+              // 3. Selection Event Fallback
               const handleSelectionCheck = () => {
                 if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
 
@@ -182,7 +293,6 @@ export default function ReaderPage() {
                     let sel = doc.getSelection();
                     let activeDoc = doc;
 
-                    // Fallback to top-level window selection if iframe selection is empty on iOS
                     if ((!sel || !sel.toString().trim()) && typeof window !== 'undefined' && window.getSelection) {
                       const topSel = window.getSelection();
                       if (topSel && topSel.toString().trim()) {
@@ -216,7 +326,6 @@ export default function ReaderPage() {
                     let absoluteX = rect.left + iframeRect.left;
                     let absoluteY = rect.top + iframeRect.top;
 
-                    // Fallback positioning if iOS returns 0,0 bounds
                     if (absoluteX <= 0 && absoluteY <= 0) {
                       absoluteX = window.innerWidth / 2 - 160;
                       absoluteY = window.innerHeight / 2 - 100;
@@ -229,7 +338,7 @@ export default function ReaderPage() {
                   } catch (err) {
                     console.error('iOS WebKit selection handler error:', err);
                   }
-                }, 500); // 500ms delay to allow native iOS selection handles to settle
+                }, 500);
               };
 
               doc.addEventListener('touchend', handleSelectionCheck, { passive: true });
