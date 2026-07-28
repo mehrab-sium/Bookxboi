@@ -8,63 +8,6 @@ import GlassTooltip from '../../../components/GlassTooltip';
 import TextSelectionLayer from '../../../components/TextSelectionLayer';
 import { loadPDF, getPDFPageData } from '../../../lib/pdfLoader';
 
-// Helper: Caret point resolution (Zero DOM Bloat Word Lookup with Debug Error Logging)
-function getWordFromPoint(doc, x, y) {
-  try {
-    let range = null;
-    try {
-      if (doc.caretRangeFromPoint) {
-        range = doc.caretRangeFromPoint(x, y);
-      } else if (doc.caretPositionFromPoint) {
-        const pos = doc.caretPositionFromPoint(x, y);
-        if (pos) {
-          range = doc.createRange();
-          range.setStart(pos.offsetNode, pos.offset);
-          range.collapse(true);
-        }
-      }
-    } catch (caretErr) {
-      console.error('[DEBUG caretRangeFromPoint Error]:', caretErr);
-    }
-
-    if (!range || !range.startContainer || range.startContainer.nodeType !== Node.TEXT_NODE) {
-      return null;
-    }
-
-    const textNode = range.startContainer;
-    const offset = range.startOffset;
-    const text = textNode.textContent;
-    if (!text) return null;
-
-    // Expand outwards to extract word boundary
-    let start = offset;
-    while (start > 0 && /[\w\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF]/.test(text[start - 1])) {
-      start--;
-    }
-    let end = offset;
-    while (end < text.length && /[\w\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF]/.test(text[end])) {
-      end++;
-    }
-
-    const word = text.slice(start, end).trim();
-    if (!word || word.length < 2) return null;
-
-    const wordRange = doc.createRange();
-    wordRange.setStart(textNode, start);
-    wordRange.setEnd(textNode, end);
-    const rect = wordRange.getBoundingClientRect();
-
-    return {
-      word,
-      context: text.trim(),
-      rect
-    };
-  } catch (e) {
-    console.error('[DEBUG getWordFromPoint Outer Exception]:', e);
-    return null;
-  }
-}
-
 export default function ReaderPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -73,7 +16,7 @@ export default function ReaderPage() {
   const [progressPercent, setProgressPercent] = useState(0);
   const viewerRef = useRef(null);
   const renditionRef = useRef(null);
-  const resizeObserverRef = useRef(null);
+  const selectionTimeoutRef = useRef(null);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -82,13 +25,13 @@ export default function ReaderPage() {
   const [readerFont, setReaderFont] = useState('serif'); // 'serif', 'sans'
 
   const themeColors = {
-    canvas: { background: '#F5F2EB', color: '#1C2321' },
-    dark: { background: '#1C2321', color: '#F5F2EB' },
-    white: { background: '#FFFFFF', color: '#1C2321' }
+    canvas: { background: '#F5F2EB', color: '#1C2321', cardBg: '#FAF8F5', border: 'rgba(28, 35, 33, 0.12)' },
+    dark: { background: '#111413', color: '#F5F2EB', cardBg: '#1C2321', border: 'rgba(245, 242, 235, 0.15)' },
+    white: { background: '#F9F9FB', color: '#1C2321', cardBg: '#FFFFFF', border: 'rgba(0, 0, 0, 0.08)' }
   };
 
   const fontFamilies = {
-    serif: 'Ogg, var(--font-display), Georgia, serif',
+    serif: 'Ogg, Georgia, "Times New Roman", serif',
     sans: 'var(--font-sans), system-ui, sans-serif'
   };
 
@@ -147,118 +90,70 @@ export default function ReaderPage() {
 
             if (!viewerRef.current) return;
 
-            // Configure EPUB Rendition with CSS Multi-Column Pagination
+            // Configure EPUB Rendition for perfect book layout across screen sizes
             const rend = book.renderTo(viewerRef.current, {
               width: '100%',
               height: '100%',
               flow: 'paginated',
-              manager: 'default',
-              spread: 'none'
+              spread: 'auto'
             });
 
             renditionRef.current = rend;
 
-            // Apply Themes
-            rend.themes.register('canvas', { "body": { "background": "#F5F2EB !important", "color": "#1C2321 !important" } });
+            // Register Themes
+            rend.themes.register('canvas', { "body": { "background": "#FAF8F5 !important", "color": "#1C2321 !important" } });
             rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
             rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
 
-            // Inject CSS Multi-Column & Typography Rules
-            rend.hooks.content.register((contents) => {
-              const doc = contents.document;
-              if (!doc) return;
+            // Apply default typography & padding rules
+            rend.themes.default({
+              "body": {
+                "padding": "5% 8% !important",
+                "font-family": `${fontFamilies[readerFont]} !important`,
+                "line-height": "1.75 !important"
+              },
+              "p": {
+                "font-size": "1.125rem !important",
+                "line-height": "1.8 !important",
+                "margin-bottom": "1em !important"
+              },
+              "img, svg": {
+                "max-width": "100% !important",
+                "max-height": "80vh !important",
+                "object-fit": "contain !important"
+              }
+            });
 
-              doc.documentElement.setAttribute('lang', record.lang || 'en');
+            // Handle word selection & tap lookup inside EPUB iframe
+            rend.on('selected', (cfiRange, contents) => {
+              if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
+              
+              selectionTimeoutRef.current = setTimeout(async () => {
+                try {
+                  const range = await rend.book.getRange(cfiRange);
+                  const word = range.toString().trim();
+                  if (!word || word.length < 2) return;
 
-              // DEBUG (1): Calculate total page count from scrollWidth / clientWidth
-              setTimeout(() => {
-                const bodyScrollWidth = doc.body ? doc.body.scrollWidth : 0;
-                const htmlScrollWidth = doc.documentElement ? doc.documentElement.scrollWidth : 0;
-                const bodyClientWidth = doc.body ? doc.body.clientWidth : 0;
-                const htmlClientWidth = doc.documentElement ? doc.documentElement.clientWidth : 0;
+                  let contextText = word;
+                  if (range.startContainer && range.startContainer.parentNode) {
+                    contextText = range.startContainer.parentNode.textContent || word;
+                  }
 
-                const effectiveScrollWidth = Math.max(bodyScrollWidth, htmlScrollWidth);
-                const effectiveClientWidth = htmlClientWidth || bodyClientWidth || 1;
-                const computedPages = Math.ceil(effectiveScrollWidth / effectiveClientWidth);
+                  const rect = range.getBoundingClientRect();
+                  const iframeRect = contents.document.defaultView.frameElement.getBoundingClientRect();
+                  const absoluteX = rect.left + iframeRect.left;
+                  const absoluteY = rect.top + iframeRect.top;
 
-                console.log('[DEBUG (1) PageCount Calculation]', {
-                  bodyScrollWidth,
-                  htmlScrollWidth,
-                  bodyClientWidth,
-                  htmlClientWidth,
-                  effectiveScrollWidth,
-                  effectiveClientWidth,
-                  computedPages
-                });
+                  triggerAiDictionary(word, contextText, absoluteX, absoluteY, rect.width, rect.height);
+                } catch (e) {
+                  console.error('Selection resolution error:', e);
+                }
               }, 300);
+            });
 
-              contents.addStylesheetRules({
-                'html, body': {
-                  'height': '100dvh !important',
-                  'margin': '0 !important',
-                  'padding': '0 !important',
-                  'overflow': 'hidden !important',
-                  '-webkit-font-smoothing': 'antialiased'
-                },
-                'body': {
-                  'column-width': '100vw !important',
-                  'column-gap': '0px !important',
-                  'column-fill': 'auto !important',
-                  'padding': '4vh min(6vw, 60px) !important',
-                  'box-sizing': 'border-box !important',
-                  'hyphens': 'auto !important',
-                  '-webkit-hyphens': 'auto !important',
-                  '-ms-hyphens': 'auto !important',
-                  'orphans': '2 !important',
-                  'widows': '2 !important'
-                },
-                'p, article, section, div, h1, h2, h3, h4': {
-                  'max-width': '65ch !important',
-                  'margin-inline': 'auto !important',
-                  'line-height': '1.8 !important',
-                  'orphans': '2 !important',
-                  'widows': '2 !important'
-                },
-                'p': {
-                  'margin-bottom': '1.25em !important'
-                },
-                'img, svg, video': {
-                  'max-width': '100% !important',
-                  'max-height': '80vh !important',
-                  'object-fit': 'contain !important',
-                  'margin-inline': 'auto !important',
-                  'display': 'block !important'
-                }
-              });
-
-              // Zero-DOM-Bloat Word Lookup on Tap / Click
-              doc.addEventListener('click', (e) => {
-                const width = doc.defaultView?.innerWidth || window.innerWidth;
-                const clickX = e.clientX;
-
-                // Tap navigation zones (left 20% prev, right 20% next)
-                if (clickX < width * 0.2) {
-                  closeAiDictionary();
-                  rend.prev();
-                  return;
-                }
-                if (clickX > width * 0.8) {
-                  closeAiDictionary();
-                  rend.next();
-                  return;
-                }
-
-                // Caret resolution from raw text nodes
-                const res = getWordFromPoint(doc, e.clientX, e.clientY);
-                if (res) {
-                  const iframeRect = doc.defaultView.frameElement.getBoundingClientRect();
-                  const absX = res.rect.left + iframeRect.left;
-                  const absY = res.rect.top + iframeRect.top;
-                  triggerAiDictionary(res.word, res.context, absX, absY, res.rect.width, res.rect.height);
-                } else {
-                  closeAiDictionary();
-                }
-              });
+            rend.on('click', () => {
+              if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
+              closeAiDictionary();
             });
 
             // Display initial or saved location
@@ -268,16 +163,9 @@ export default function ReaderPage() {
               await rend.display();
             }
 
-            // Track location relocation
+            // Track location relocation for progression system
             rend.on('relocated', (location) => {
               closeAiDictionary();
-              console.log('[DEBUG Relocated Location]', {
-                location,
-                startCfi: location?.start?.cfi,
-                percentage: location?.start?.percentage,
-                atStart: location?.atStart,
-                atEnd: location?.atEnd
-              });
               if (location && location.start) {
                 const cfi = location.start.cfi;
                 const pct = Math.round((location.start.percentage || 0) * 100);
@@ -286,22 +174,14 @@ export default function ReaderPage() {
               }
             });
 
-            // DEBUG (2): ResizeObserver with firing counter
-            let resizeCallCount = 0;
-            if (viewerRef.current) {
-              const observer = new ResizeObserver((entries) => {
-                resizeCallCount++;
-                console.log(`[DEBUG (2) ResizeObserver Call #${resizeCallCount}]`, {
-                  targetWidth: entries[0]?.contentRect?.width,
-                  targetHeight: entries[0]?.contentRect?.height
-                });
-                if (renditionRef.current) {
-                  renditionRef.current.resize('100%', '100%');
-                }
-              });
-              observer.observe(viewerRef.current);
-              resizeObserverRef.current = observer;
-            }
+            // Window resize handler for responsive layout
+            const handleResize = () => {
+              if (renditionRef.current) {
+                renditionRef.current.resize('100%', '100%');
+              }
+            };
+            window.addEventListener('resize', handleResize, { passive: true });
+
           }, 100);
         } else if (record.type === 'pdf') {
           const doc = await loadPDF(record.data);
@@ -315,12 +195,6 @@ export default function ReaderPage() {
     };
 
     initBook();
-
-    return () => {
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
-      }
-    };
   }, [id, router]);
 
   // Handle Theme & Font updates
@@ -330,7 +204,7 @@ export default function ReaderPage() {
       renditionRef.current.themes.default({
         "body": {
           "font-family": `${fontFamilies[readerFont]} !important`,
-          "padding": "4vh min(6vw, 60px) !important"
+          "padding": "5% 8% !important"
         }
       });
     }
@@ -373,7 +247,6 @@ export default function ReaderPage() {
   const handlePageNext = () => {
     closeAiDictionary();
     if (activeBook?.type === 'epub' && renditionRef.current) {
-      console.log('[DEBUG Action]: handlePageNext called');
       renditionRef.current.next();
     } else if (activeBook?.type === 'pdf' && pdfDoc) {
       if (pdfCurrentPage < pdfDoc.numPages) {
@@ -385,7 +258,6 @@ export default function ReaderPage() {
   const handlePagePrev = () => {
     closeAiDictionary();
     if (activeBook?.type === 'epub' && renditionRef.current) {
-      console.log('[DEBUG Action]: handlePagePrev called');
       renditionRef.current.prev();
     } else if (activeBook?.type === 'pdf' && pdfDoc) {
       if (pdfCurrentPage > 1) {
@@ -413,20 +285,22 @@ export default function ReaderPage() {
   const dynamicFabStyle = {
     ...fabStyle,
     color: readerTheme === 'dark' ? '#F5F2EB' : '#1C2321',
-    background: readerTheme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(245, 242, 235, 0.75)',
+    background: readerTheme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(245, 242, 235, 0.85)',
     border: readerTheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(28, 35, 33, 0.12)'
   };
 
   if (!activeBook) {
     return (
-      <div className="min-h-[100dvh] bg-canvas-light flex items-center justify-center">
+      <div className="min-h-screen bg-canvas-light flex items-center justify-center">
         <div className="spinner" style={{ width: '32px', height: '32px', border: '2px solid rgba(0,0,0,0.1)', borderTop: '2px solid var(--color-contrast-midnight)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
   }
 
+  const currentColors = themeColors[readerTheme];
+
   return (
-    <div style={{ height: '100dvh', width: '100vw', position: 'relative', overflow: 'hidden', background: themeColors[readerTheme].background }}>
+    <div style={{ height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden', background: currentColors.background, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       
       {/* Top Reading Progress Indicator Badge & Micro Line */}
       <div style={{
@@ -515,56 +389,71 @@ export default function ReaderPage() {
         <ChevronRight size={22} />
       </button>
 
-      {/* Multi-Column CSS EPUB Container */}
-      {activeBook.type === 'epub' ? (
-        <div
-          ref={viewerRef}
-          style={{
-            height: '100dvh',
-            width: '100vw',
-            position: 'absolute',
-            inset: 0,
-            overflow: 'hidden'
-          }}
-        />
-      ) : null}
+      {/* Book Canvas Container - Responsive centered book layout */}
+      <div 
+        style={{
+          width: 'min(92vw, 1100px)',
+          height: 'min(86vh, 850px)',
+          margin: '0 auto',
+          position: 'relative',
+          borderRadius: '16px',
+          background: currentColors.cardBg,
+          border: `1px solid ${currentColors.border}`,
+          boxShadow: '0 25px 60px -15px rgba(0,0,0,0.18)',
+          overflow: 'hidden',
+          transition: 'background 0.3s ease, border 0.3s ease'
+        }}
+      >
+        {/* EPUB Viewer Container */}
+        {activeBook.type === 'epub' ? (
+          <div
+            ref={viewerRef}
+            style={{
+              height: '100%',
+              width: '100%',
+              position: 'absolute',
+              inset: 0
+            }}
+          />
+        ) : null}
 
-      {/* PDF Container */}
-      {activeBook.type === 'pdf' ? (
-        <div style={{ width: '100vw', height: '100dvh', position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ 
-            width: `${pageDimensions.width}px`, 
-            height: `${pageDimensions.height}px`,
-            position: 'relative',
-            transform: `scale(min(1, calc(100vw / ${pageDimensions.width + 80}), calc(100dvh / ${pageDimensions.height + 120})))`,
-            transformOrigin: 'center center',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-            background: 'white'
-          }}>
-            {currentPageCanvas ? (
-              <canvas
-                ref={(el) => {
-                  if (el && currentPageCanvas) {
-                    el.width = currentPageCanvas.width;
-                    el.height = currentPageCanvas.height;
-                    const ctx = el.getContext('2d');
-                    ctx.drawImage(currentPageCanvas, 0, 0);
-                  }
+        {/* PDF Container */}
+        {activeBook.type === 'pdf' ? (
+          <div style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ 
+              width: `${pageDimensions.width}px`, 
+              height: `${pageDimensions.height}px`,
+              position: 'relative',
+              transform: `scale(min(1, calc(90vw / ${pageDimensions.width}), calc(80vh / ${pageDimensions.height})))`,
+              transformOrigin: 'center center',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+              background: 'white'
+            }}>
+              {currentPageCanvas ? (
+                <canvas
+                  ref={(el) => {
+                    if (el && currentPageCanvas) {
+                      el.width = currentPageCanvas.width;
+                      el.height = currentPageCanvas.height;
+                      const ctx = el.getContext('2d');
+                      ctx.drawImage(currentPageCanvas, 0, 0);
+                    }
+                  }}
+                  style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+                />
+              ) : null}
+              <TextSelectionLayer
+                textItems={textItems}
+                pageWidth={pageDimensions.width}
+                pageHeight={pageDimensions.height}
+                onSelectionChange={(word, rect, context) => {
+                  triggerAiDictionary(word, context, rect.left, rect.top, rect.width, rect.height);
                 }}
-                style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
               />
-            ) : null}
-            <TextSelectionLayer
-              textItems={textItems}
-              pageWidth={pageDimensions.width}
-              pageHeight={pageDimensions.height}
-              onSelectionChange={(word, rect, context) => {
-                triggerAiDictionary(word, context, rect.left, rect.top, rect.width, rect.height);
-              }}
-            />
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       {/* GlassTooltip Overlay */}
       {(selectedWord && selectionRect) ? (
