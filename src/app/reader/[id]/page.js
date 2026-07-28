@@ -8,19 +8,23 @@ import GlassTooltip from '../../../components/GlassTooltip';
 import TextSelectionLayer from '../../../components/TextSelectionLayer';
 import { loadPDF, getPDFPageData } from '../../../lib/pdfLoader';
 
-// Helper: Caret point resolution (Zero DOM Bloat Word Lookup)
+// Helper: Caret point resolution (Zero DOM Bloat Word Lookup with Debug Error Logging)
 function getWordFromPoint(doc, x, y) {
   try {
     let range = null;
-    if (doc.caretRangeFromPoint) {
-      range = doc.caretRangeFromPoint(x, y);
-    } else if (doc.caretPositionFromPoint) {
-      const pos = doc.caretPositionFromPoint(x, y);
-      if (pos) {
-        range = doc.createRange();
-        range.setStart(pos.offsetNode, pos.offset);
-        range.collapse(true);
+    try {
+      if (doc.caretRangeFromPoint) {
+        range = doc.caretRangeFromPoint(x, y);
+      } else if (doc.caretPositionFromPoint) {
+        const pos = doc.caretPositionFromPoint(x, y);
+        if (pos) {
+          range = doc.createRange();
+          range.setStart(pos.offsetNode, pos.offset);
+          range.collapse(true);
+        }
       }
+    } catch (caretErr) {
+      console.error('[DEBUG caretRangeFromPoint Error]:', caretErr);
     }
 
     if (!range || !range.startContainer || range.startContainer.nodeType !== Node.TEXT_NODE) {
@@ -56,6 +60,7 @@ function getWordFromPoint(doc, x, y) {
       rect
     };
   } catch (e) {
+    console.error('[DEBUG getWordFromPoint Outer Exception]:', e);
     return null;
   }
 }
@@ -165,6 +170,28 @@ export default function ReaderPage() {
 
               doc.documentElement.setAttribute('lang', record.lang || 'en');
 
+              // DEBUG (1): Calculate total page count from scrollWidth / clientWidth
+              setTimeout(() => {
+                const bodyScrollWidth = doc.body ? doc.body.scrollWidth : 0;
+                const htmlScrollWidth = doc.documentElement ? doc.documentElement.scrollWidth : 0;
+                const bodyClientWidth = doc.body ? doc.body.clientWidth : 0;
+                const htmlClientWidth = doc.documentElement ? doc.documentElement.clientWidth : 0;
+
+                const effectiveScrollWidth = Math.max(bodyScrollWidth, htmlScrollWidth);
+                const effectiveClientWidth = htmlClientWidth || bodyClientWidth || 1;
+                const computedPages = Math.ceil(effectiveScrollWidth / effectiveClientWidth);
+
+                console.log('[DEBUG (1) PageCount Calculation]', {
+                  bodyScrollWidth,
+                  htmlScrollWidth,
+                  bodyClientWidth,
+                  htmlClientWidth,
+                  effectiveScrollWidth,
+                  effectiveClientWidth,
+                  computedPages
+                });
+              }, 300);
+
               contents.addStylesheetRules({
                 'html, body': {
                   'height': '100dvh !important',
@@ -244,6 +271,13 @@ export default function ReaderPage() {
             // Track location relocation
             rend.on('relocated', (location) => {
               closeAiDictionary();
+              console.log('[DEBUG Relocated Location]', {
+                location,
+                startCfi: location?.start?.cfi,
+                percentage: location?.start?.percentage,
+                atStart: location?.atStart,
+                atEnd: location?.atEnd
+              });
               if (location && location.start) {
                 const cfi = location.start.cfi;
                 const pct = Math.round((location.start.percentage || 0) * 100);
@@ -252,9 +286,15 @@ export default function ReaderPage() {
               }
             });
 
-            // ResizeObserver to re-paginate on window resize, orientation change, or keyboard open
+            // DEBUG (2): ResizeObserver with firing counter
+            let resizeCallCount = 0;
             if (viewerRef.current) {
-              const observer = new ResizeObserver(() => {
+              const observer = new ResizeObserver((entries) => {
+                resizeCallCount++;
+                console.log(`[DEBUG (2) ResizeObserver Call #${resizeCallCount}]`, {
+                  targetWidth: entries[0]?.contentRect?.width,
+                  targetHeight: entries[0]?.contentRect?.height
+                });
                 if (renditionRef.current) {
                   renditionRef.current.resize('100%', '100%');
                 }
@@ -333,6 +373,7 @@ export default function ReaderPage() {
   const handlePageNext = () => {
     closeAiDictionary();
     if (activeBook?.type === 'epub' && renditionRef.current) {
+      console.log('[DEBUG Action]: handlePageNext called');
       renditionRef.current.next();
     } else if (activeBook?.type === 'pdf' && pdfDoc) {
       if (pdfCurrentPage < pdfDoc.numPages) {
@@ -344,6 +385,7 @@ export default function ReaderPage() {
   const handlePagePrev = () => {
     closeAiDictionary();
     if (activeBook?.type === 'epub' && renditionRef.current) {
+      console.log('[DEBUG Action]: handlePagePrev called');
       renditionRef.current.prev();
     } else if (activeBook?.type === 'pdf' && pdfDoc) {
       if (pdfCurrentPage > 1) {
