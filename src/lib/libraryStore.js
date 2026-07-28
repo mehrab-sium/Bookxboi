@@ -3,7 +3,7 @@ const DB_NAME = 'PremiumReaderLibraryDB';
 const STORE_NAME = 'books';
 const DB_VERSION = 1;
 
-// Curated Masterpiece Public Books served online from /books/
+// Curated Masterpiece Public Books served online from /books/ with pre-extracted covers
 export const PUBLIC_BOOKS = [
   {
     id: 'pub-ali-madonna',
@@ -11,6 +11,7 @@ export const PUBLIC_BOOKS = [
     author: 'Sabahattin Ali',
     fileName: 'Ali_Madonna_in_a_Fur_Coat.epub',
     url: '/books/Ali_Madonna_in_a_Fur_Coat.epub',
+    coverImage: '/covers/Ali_Madonna_in_a_Fur_Coat.jpg',
     type: 'epub',
     addedAt: 1700000001000
   },
@@ -20,6 +21,7 @@ export const PUBLIC_BOOKS = [
     author: 'Charlotte Brontë',
     fileName: 'Bronte_Jane_Eyre.epub',
     url: '/books/Bronte_Jane_Eyre.epub',
+    coverImage: '/covers/Bronte_Jane_Eyre.jpg',
     type: 'epub',
     addedAt: 1700000002000
   },
@@ -29,6 +31,7 @@ export const PUBLIC_BOOKS = [
     author: 'Emily Brontë',
     fileName: 'Bronte_Wuthering_Heights.epub',
     url: '/books/Bronte_Wuthering_Heights.epub',
+    coverImage: '/covers/Bronte_Wuthering_Heights.jpg',
     type: 'epub',
     addedAt: 1700000003000
   },
@@ -38,6 +41,7 @@ export const PUBLIC_BOOKS = [
     author: 'Albert Camus',
     fileName: 'Camus_The_Myth_of_Sisyphus_and_Other_Essays.epub',
     url: '/books/Camus_The_Myth_of_Sisyphus_and_Other_Essays.epub',
+    coverImage: '/covers/Camus_The_Myth_of_Sisyphus_and_Other_Essays.jpg',
     type: 'epub',
     addedAt: 1700000004000
   },
@@ -47,6 +51,7 @@ export const PUBLIC_BOOKS = [
     author: 'Albert Camus',
     fileName: 'Camus_The_Plague.epub',
     url: '/books/Camus_The_Plague.epub',
+    coverImage: '/covers/Camus_The_Plague.jpeg',
     type: 'epub',
     addedAt: 1700000005000
   },
@@ -56,6 +61,7 @@ export const PUBLIC_BOOKS = [
     author: 'Osamu Dazai',
     fileName: 'Dazai_No_Longer_Human.epub',
     url: '/books/Dazai_No_Longer_Human.epub',
+    coverImage: '/covers/Dazai_No_Longer_Human.jpg',
     type: 'epub',
     addedAt: 1700000006000
   },
@@ -65,6 +71,7 @@ export const PUBLIC_BOOKS = [
     author: 'Charles Dickens',
     fileName: 'Dickens_A_Tale_of_Two_Cities.epub',
     url: '/books/Dickens_A_Tale_of_Two_Cities.epub',
+    coverImage: '/covers/Dickens_A_Tale_of_Two_Cities.jpg',
     type: 'epub',
     addedAt: 1700000007000
   },
@@ -74,6 +81,7 @@ export const PUBLIC_BOOKS = [
     author: 'Fyodor Dostoevsky',
     fileName: 'Dostoevsky_The_Idiot.epub',
     url: '/books/Dostoevsky_The_Idiot.epub',
+    coverImage: '/covers/Dostoevsky_The_Idiot.jpg',
     type: 'epub',
     addedAt: 1700000008000
   },
@@ -83,6 +91,7 @@ export const PUBLIC_BOOKS = [
     author: 'Fyodor Dostoevsky',
     fileName: 'Dostoyevsky_Crime_and_Punishment.epub',
     url: '/books/Dostoyevsky_Crime_and_Punishment.epub',
+    coverImage: '/covers/Dostoyevsky_Crime_and_Punishment.jpg',
     type: 'epub',
     addedAt: 1700000009000
   },
@@ -90,8 +99,9 @@ export const PUBLIC_BOOKS = [
     id: 'pub-dostoyevsky-notes-from-underground',
     name: 'Notes from Underground',
     author: 'Fyodor Dostoevsky',
-    fileName: 'Dostoyevsky_Notes_From_Underground.epub',
-    url: '/books/Dostoyevsky_Notes_From_Underground.epub',
+    fileName: 'Dostoyevsky_Notes_from_the_Underground.epub',
+    url: '/books/Dostoyevsky_Notes_from_the_Underground.epub',
+    coverImage: '/covers/Dostoyevsky_Notes_from_the_Underground.jpg',
     type: 'epub',
     addedAt: 1700000010000
   },
@@ -101,6 +111,7 @@ export const PUBLIC_BOOKS = [
     author: 'Fyodor Dostoevsky',
     fileName: 'Dostoyevsky_The_Brothers_Karamazov.epub',
     url: '/books/Dostoyevsky_The_Brothers_Karamazov.epub',
+    coverImage: '/covers/Dostoyevsky_The_Brothers_Karamazov.jpg',
     type: 'epub',
     addedAt: 1700000011000
   },
@@ -110,15 +121,17 @@ export const PUBLIC_BOOKS = [
     author: 'Fyodor Dostoevsky',
     fileName: 'Dostoyevsky_White_Nights.epub',
     url: '/books/Dostoyevsky_White_Nights.epub',
+    coverImage: '/covers/Dostoyevsky_White_Nights.jpg',
     type: 'epub',
     addedAt: 1700000012000
   },
   {
     id: 'pub-goethe-werther',
     name: 'The Sorrows of Young Werther',
-    author: 'J. W. von Goethe',
+    author: 'Johann Wolfgang von Goethe',
     fileName: 'Goethe_Sorrows_of_Young_Werther.epub',
     url: '/books/Goethe_Sorrows_of_Young_Werther.epub',
+    coverImage: '/covers/Goethe_Sorrows_of_Young_Werther.jpeg',
     type: 'epub',
     addedAt: 1700000013000
   },
@@ -128,6 +141,7 @@ export const PUBLIC_BOOKS = [
     author: 'Aldous Huxley',
     fileName: 'Huxley_Brave_New_World.epub',
     url: '/books/Huxley_Brave_New_World.epub',
+    coverImage: '/covers/Huxley_Brave_New_World.jpeg',
     type: 'epub',
     addedAt: 1700000014000
   },
@@ -137,6 +151,7 @@ export const PUBLIC_BOOKS = [
     author: 'Franz Kafka',
     fileName: 'Kafka_Metamorphosis.epub',
     url: '/books/Kafka_Metamorphosis.epub',
+    coverImage: '/covers/Kafka_Metamorphosis.jpg',
     type: 'epub',
     addedAt: 1700000015000
   },
@@ -146,6 +161,7 @@ export const PUBLIC_BOOKS = [
     author: 'Franz Kafka',
     fileName: 'Kafka_The_Trial.epub',
     url: '/books/Kafka_The_Trial.epub',
+    coverImage: '/covers/Kafka_The_Trial.png',
     type: 'epub',
     addedAt: 1700000016000
   },
@@ -155,6 +171,7 @@ export const PUBLIC_BOOKS = [
     author: 'Søren Kierkegaard',
     fileName: 'Kierkegaard_Fear_and_Trembling.epub',
     url: '/books/Kierkegaard_Fear_and_Trembling.epub',
+    coverImage: '/covers/Kierkegaard_Fear_and_Trembling.jpg',
     type: 'epub',
     addedAt: 1700000017000
   },
@@ -164,6 +181,7 @@ export const PUBLIC_BOOKS = [
     author: 'Niccolò Machiavelli',
     fileName: 'Machiavelli_The_Prince.epub',
     url: '/books/Machiavelli_The_Prince.epub',
+    coverImage: '/covers/Machiavelli_The_Prince.jpeg',
     type: 'epub',
     addedAt: 1700000018000
   },
@@ -173,6 +191,7 @@ export const PUBLIC_BOOKS = [
     author: 'Marcus Aurelius',
     fileName: 'Marcus_Aurelius_Meditations.epub',
     url: '/books/Marcus_Aurelius_Meditations.epub',
+    coverImage: '/covers/Marcus_Aurelius_Meditations.jpeg',
     type: 'epub',
     addedAt: 1700000019000
   },
@@ -182,6 +201,7 @@ export const PUBLIC_BOOKS = [
     author: 'Friedrich Nietzsche',
     fileName: 'Nietzsche_Beyond_Good_and_Evil.epub',
     url: '/books/Nietzsche_Beyond_Good_and_Evil.epub',
+    coverImage: '/covers/Nietzsche_Beyond_Good_and_Evil.jpg',
     type: 'epub',
     addedAt: 1700000020000
   },
@@ -191,6 +211,7 @@ export const PUBLIC_BOOKS = [
     author: 'Friedrich Nietzsche',
     fileName: 'Nietzsche_Thus_Spoke_Zarathustra.epub',
     url: '/books/Nietzsche_Thus_Spoke_Zarathustra.epub',
+    coverImage: '/covers/Nietzsche_Thus_Spoke_Zarathustra.jpg',
     type: 'epub',
     addedAt: 1700000021000
   },
@@ -200,6 +221,7 @@ export const PUBLIC_BOOKS = [
     author: 'George Orwell',
     fileName: 'Orwell_1984.epub',
     url: '/books/Orwell_1984.epub',
+    coverImage: '/covers/Orwell_1984.jpg',
     type: 'epub',
     addedAt: 1700000022000
   },
@@ -209,6 +231,7 @@ export const PUBLIC_BOOKS = [
     author: 'Sylvia Plath',
     fileName: 'Plath_The_Bell_Jar.epub',
     url: '/books/Plath_The_Bell_Jar.epub',
+    coverImage: '/covers/Plath_The_Bell_Jar.jpeg',
     type: 'epub',
     addedAt: 1700000023000
   },
@@ -218,6 +241,7 @@ export const PUBLIC_BOOKS = [
     author: 'John Steinbeck',
     fileName: 'Steinbeck_East_of_Eden.epub',
     url: '/books/Steinbeck_East_of_Eden.epub',
+    coverImage: '/covers/Steinbeck_East_of_Eden.jpg',
     type: 'epub',
     addedAt: 1700000024000
   },
@@ -227,6 +251,7 @@ export const PUBLIC_BOOKS = [
     author: 'John Steinbeck',
     fileName: 'Steinbeck_The_Pearl.epub',
     url: '/books/Steinbeck_The_Pearl.epub',
+    coverImage: '/covers/Steinbeck_The_Pearl.jpg',
     type: 'epub',
     addedAt: 1700000025000
   },
@@ -236,6 +261,7 @@ export const PUBLIC_BOOKS = [
     author: 'Leo Tolstoy',
     fileName: 'Tolstoy_Anna_Karenina.epub',
     url: '/books/Tolstoy_Anna_Karenina.epub',
+    coverImage: '/covers/Tolstoy_Anna_Karenina.jpg',
     type: 'epub',
     addedAt: 1700000026000
   },
@@ -245,6 +271,7 @@ export const PUBLIC_BOOKS = [
     author: 'Oscar Wilde',
     fileName: 'Wilde_The_Picture_of_Dorian_Gray.epub',
     url: '/books/Wilde_The_Picture_of_Dorian_Gray.epub',
+    coverImage: '/covers/Wilde_The_Picture_of_Dorian_Gray.jpg',
     type: 'epub',
     addedAt: 1700000027000
   },
@@ -254,6 +281,7 @@ export const PUBLIC_BOOKS = [
     author: 'Virginia Woolf',
     fileName: 'Woolf_Mrs_Dalloway.epub',
     url: '/books/Woolf_Mrs_Dalloway.epub',
+    coverImage: '/covers/Woolf_Mrs_Dalloway.jpg',
     type: 'epub',
     addedAt: 1700000028000
   },
@@ -263,6 +291,7 @@ export const PUBLIC_BOOKS = [
     author: 'Aetherius Editorial',
     fileName: 'sample-pdf',
     url: 'sample-pdf',
+    coverImage: null,
     type: 'pdf',
     addedAt: 1700000000000
   }
@@ -413,7 +442,6 @@ export async function getAllBooks() {
 }
 
 export async function getBookData(id) {
-  // Check if it matches a public book
   const pub = PUBLIC_BOOKS.find(b => b.id === id);
   if (pub) {
     const localProg = getLocalProgress(id);

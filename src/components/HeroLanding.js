@@ -79,54 +79,6 @@ export default function HeroLanding({ setView }) {
       ref={containerRef} 
       className="relative w-full h-[150vh] overflow-hidden"
     >
-      {/* 1. Global Responsive Canvas Backgrounds */}
-      {/* Desktop & Widescreen Background (Hidden on Mobile) */}
-      <div className="fixed inset-0 w-full h-full -z-50 hidden md:block overflow-hidden select-none pointer-events-none">
-        <Image 
-          src="/new-16-9.webp"
-          alt="Book X Boi Desktop Background"
-          fill
-          priority
-          sizes="100vw"
-          quality={95}
-          className="object-cover object-center w-full h-full"
-        />
-        {/* Subtle Vignette Scrim for Desktop */}
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse at 35% 50%, rgba(10, 12, 11, 0.45) 0%, rgba(10, 12, 11, 0.2) 60%, rgba(10, 12, 11, 0.55) 100%)"
-          }}
-        />
-      </div>
-
-      {/* Mobile & 9:16 Phone Background (Hidden on Desktop) */}
-      <div className="fixed inset-0 w-full h-full -z-50 block md:hidden overflow-hidden select-none pointer-events-none">
-        <Image 
-          src="/for-phone.webp"
-          alt="Book X Boi Phone Background"
-          fill
-          priority
-          sizes="100vw"
-          quality={95}
-          className="object-cover object-center w-full h-full"
-        />
-        {/* Mobile Scrim Gradient */}
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "linear-gradient(to bottom, rgba(10, 12, 11, 0.4) 0%, rgba(10, 12, 11, 0.2) 50%, rgba(10, 12, 11, 0.65) 100%)"
-          }}
-        />
-      </div>
-
-      {/* 2. Floating Glass Frosted Canvas Layer */}
-      <div 
-        className="fixed inset-0 w-full h-full -z-40 pointer-events-none backdrop-blur-[7px] bg-[#0a0c0b]/25 transition-all duration-700 ease-out"
-        style={{
-          background: "radial-gradient(ellipse at 50% 30%, rgba(245, 242, 235, 0.03) 0%, rgba(10, 12, 11, 0.3) 100%)"
-        }}
-      />
 
       <div className="sticky top-0 w-full h-screen flex flex-col lg:flex-row items-center justify-between px-6 lg:px-12 py-24 gap-12 overflow-hidden pointer-events-none">
         
