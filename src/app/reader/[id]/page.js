@@ -14,6 +14,7 @@ export default function ReaderPage() {
 
   const [activeBook, setActiveBook] = useState(null);
   const [progressPercent, setProgressPercent] = useState(0);
+  
   const viewerRef = useRef(null);
   const renditionRef = useRef(null);
   const bookRef = useRef(null);
@@ -22,8 +23,8 @@ export default function ReaderPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Settings State
-  const [readerTheme, setReaderTheme] = useState('canvas'); // 'canvas', 'dark', 'white'
-  const [readerFont, setReaderFont] = useState('serif'); // 'serif', 'sans'
+  const [readerTheme, setReaderTheme] = useState('canvas');
+  const [readerFont, setReaderFont] = useState('serif');
 
   const themeColors = {
     canvas: { background: '#F5F2EB', color: '#1C2321', cardBg: '#FAF8F5', border: 'rgba(28, 35, 33, 0.12)' },
@@ -36,14 +37,14 @@ export default function ReaderPage() {
     sans: 'var(--font-sans), system-ui, sans-serif'
   };
 
-  // PDF Reader State
+  // PDF Reader state
   const [pdfDoc, setPdfDoc] = useState(null);
   const [pdfCurrentPage, setPdfCurrentPage] = useState(1);
   const [currentPageCanvas, setCurrentPageCanvas] = useState(null);
   const [pageDimensions, setPageDimensions] = useState({ width: 540, height: 720 });
   const [textItems, setTextItems] = useState([]);
 
-  // AI Dictionary Selection State
+  // Selection / AI Context state
   const [selectedWord, setSelectedWord] = useState('');
   const [selectionRect, setSelectionRect] = useState(null);
   const [selectionContext, setSelectionContext] = useState('');
@@ -66,7 +67,7 @@ export default function ReaderPage() {
     setSelectionRect(null);
   };
 
-  // Mount EPUB & PDF Readers cleanly from First Principles
+  // Initialize Reader from scratch
   useEffect(() => {
     if (!id) return;
 
@@ -100,10 +101,10 @@ export default function ReaderPage() {
 
             await book.ready;
 
-            // Generate location index for accurate progression calculations across chapters
-            book.locations.generate(1000).catch((e) => console.warn('Locations generation notice:', e));
+            // Generate location index for accurate progression calculations
+            book.locations.generate(1000).catch(() => {});
 
-            // Initialize Rendition
+            // Initialize Rendition with paginated flow
             const rend = book.renderTo(viewerRef.current, {
               width: '100%',
               height: '100%',
@@ -113,12 +114,12 @@ export default function ReaderPage() {
 
             renditionRef.current = rend;
 
-            // Register Themes
+            // Apply Themes
             rend.themes.register('canvas', { "body": { "background": "#FAF8F5 !important", "color": "#1C2321 !important" } });
             rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
             rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
 
-            // Apply Default Typography & Clean Viewport Margins
+            // Apply Typography
             rend.themes.default({
               "body": {
                 "padding": "4% 6% !important",
@@ -136,7 +137,7 @@ export default function ReaderPage() {
               }
             });
 
-            // Handle Text Selection / Tap for Context AI Dictionary Lookup
+            // Handle Text Selection & Tap for AI Dictionary
             rend.on('selected', (cfiRange, contents) => {
               if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
 
@@ -154,12 +155,16 @@ export default function ReaderPage() {
                   const rect = range.getBoundingClientRect();
                   const iframeRect = contents.document.defaultView.frameElement.getBoundingClientRect();
 
-                  const absoluteX = rect.left + iframeRect.left;
-                  const absoluteY = rect.top + iframeRect.top;
-
-                  triggerAiDictionary(word, contextText, absoluteX, absoluteY, rect.width, rect.height);
+                  triggerAiDictionary(
+                    word,
+                    contextText,
+                    rect.left + iframeRect.left,
+                    rect.top + iframeRect.top,
+                    rect.width,
+                    rect.height
+                  );
                 } catch (err) {
-                  console.error('Error resolving text selection:', err);
+                  console.error('Error getting selection:', err);
                 }
               }, 400);
             });
@@ -169,14 +174,14 @@ export default function ReaderPage() {
               closeAiDictionary();
             });
 
-            // Display initial saved CFI location or start of book
+            // Display initial saved location or start of book
             if (record.lastLocation) {
               await rend.display(record.lastLocation);
             } else {
               await rend.display();
             }
 
-            // Track location relocation for persistent progression
+            // Progression Relocation Listener
             rend.on('relocated', (location) => {
               closeAiDictionary();
               if (location && location.start) {
@@ -203,7 +208,7 @@ export default function ReaderPage() {
           await loadPDFPage(doc, startPage, decodedId);
         }
       } catch (err) {
-        console.error('Error opening reader:', err);
+        console.error('Error initializing reader:', err);
       }
     };
 
@@ -215,7 +220,7 @@ export default function ReaderPage() {
     };
   }, [id, router]);
 
-  // Apply Theme & Font updates dynamically
+  // Update theme & font settings dynamically
   useEffect(() => {
     if (renditionRef.current) {
       renditionRef.current.themes.select(readerTheme);
@@ -228,7 +233,7 @@ export default function ReaderPage() {
     }
   }, [readerTheme, readerFont]);
 
-  // Window Resize Listener for Responsive Layout
+  // Window Resize Listener
   useEffect(() => {
     const handleResize = () => {
       if (renditionRef.current) {
@@ -239,7 +244,7 @@ export default function ReaderPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Keyboard Arrow Navigation
+  // Keyboard Arrow Listener
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft') {
@@ -273,9 +278,19 @@ export default function ReaderPage() {
     }
   };
 
-  const handlePageNext = () => {
+  // Failproof Page Navigation across Section Boundaries
+  const handlePageNext = async () => {
     closeAiDictionary();
     if (activeBook?.type === 'epub' && renditionRef.current) {
+      const loc = renditionRef.current.currentLocation();
+      if (loc && loc.atEnd && bookRef.current) {
+        const nextSectionIndex = (loc.start?.index || 0) + 1;
+        const nextSection = bookRef.current.spine.get(nextSectionIndex);
+        if (nextSection) {
+          await renditionRef.current.display(nextSection.href);
+          return;
+        }
+      }
       renditionRef.current.next();
     } else if (activeBook?.type === 'pdf' && pdfDoc) {
       if (pdfCurrentPage < pdfDoc.numPages) {
@@ -284,9 +299,20 @@ export default function ReaderPage() {
     }
   };
 
-  const handlePagePrev = () => {
+  const handlePagePrev = async () => {
     closeAiDictionary();
     if (activeBook?.type === 'epub' && renditionRef.current) {
+      const loc = renditionRef.current.currentLocation();
+      if (loc && loc.atStart && bookRef.current) {
+        const prevSectionIndex = (loc.start?.index || 0) - 1;
+        if (prevSectionIndex >= 0) {
+          const prevSection = bookRef.current.spine.get(prevSectionIndex);
+          if (prevSection) {
+            await renditionRef.current.display(prevSection.href);
+            return;
+          }
+        }
+      }
       renditionRef.current.prev();
     } else if (activeBook?.type === 'pdf' && pdfDoc) {
       if (pdfCurrentPage > 1) {
@@ -379,7 +405,7 @@ export default function ReaderPage() {
         </div>
       </div>
 
-      {/* Floating Action Buttons */}
+      {/* Floating Controls */}
       <button 
         onClick={() => router.push('/')}
         style={{ ...dynamicFabStyle, top: '20px', left: '20px' }}
@@ -418,7 +444,7 @@ export default function ReaderPage() {
         <ChevronRight size={22} />
       </button>
 
-      {/* Responsive Book Canvas Frame with Border & Soft Shadow */}
+      {/* Responsive Book Frame Canvas */}
       <div 
         style={{
           width: 'min(92vw, 1050px)',
