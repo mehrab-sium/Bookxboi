@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -9,17 +8,70 @@ import GlassTooltip from '../../../components/GlassTooltip';
 import TextSelectionLayer from '../../../components/TextSelectionLayer';
 import { loadPDF, getPDFPageData } from '../../../lib/pdfLoader';
 
+// Helper: Caret point resolution (Zero DOM Bloat Word Lookup)
+function getWordFromPoint(doc, x, y) {
+  try {
+    let range = null;
+    if (doc.caretRangeFromPoint) {
+      range = doc.caretRangeFromPoint(x, y);
+    } else if (doc.caretPositionFromPoint) {
+      const pos = doc.caretPositionFromPoint(x, y);
+      if (pos) {
+        range = doc.createRange();
+        range.setStart(pos.offsetNode, pos.offset);
+        range.collapse(true);
+      }
+    }
+
+    if (!range || !range.startContainer || range.startContainer.nodeType !== Node.TEXT_NODE) {
+      return null;
+    }
+
+    const textNode = range.startContainer;
+    const offset = range.startOffset;
+    const text = textNode.textContent;
+    if (!text) return null;
+
+    // Expand outwards to extract word boundary
+    let start = offset;
+    while (start > 0 && /[\w\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF]/.test(text[start - 1])) {
+      start--;
+    }
+    let end = offset;
+    while (end < text.length && /[\w\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF]/.test(text[end])) {
+      end++;
+    }
+
+    const word = text.slice(start, end).trim();
+    if (!word || word.length < 2) return null;
+
+    const wordRange = doc.createRange();
+    wordRange.setStart(textNode, start);
+    wordRange.setEnd(textNode, end);
+    const rect = wordRange.getBoundingClientRect();
+
+    return {
+      word,
+      context: text.trim(),
+      rect
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 export default function ReaderPage() {
   const { id } = useParams();
   const router = useRouter();
-  
+
   const [activeBook, setActiveBook] = useState(null);
   const [progressPercent, setProgressPercent] = useState(0);
   const viewerRef = useRef(null);
   const renditionRef = useRef(null);
-  const selectionTimeoutRef = useRef(null);
+  const resizeObserverRef = useRef(null);
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
+
   // Settings State
   const [readerTheme, setReaderTheme] = useState('canvas'); // 'canvas', 'dark', 'white'
   const [readerFont, setReaderFont] = useState('serif'); // 'serif', 'sans'
@@ -29,10 +81,10 @@ export default function ReaderPage() {
     dark: { background: '#1C2321', color: '#F5F2EB' },
     white: { background: '#FFFFFF', color: '#1C2321' }
   };
-  
+
   const fontFamilies = {
-    serif: 'Ogg, var(--font-display), serif',
-    sans: 'var(--font-sans), sans-serif'
+    serif: 'Ogg, var(--font-display), Georgia, serif',
+    sans: 'var(--font-sans), system-ui, sans-serif'
   };
 
   // PDF states
@@ -65,15 +117,16 @@ export default function ReaderPage() {
     setSelectionRect(null);
   };
 
+  // Initialize Book Reader
   useEffect(() => {
     if (!id) return;
-    
+
     const initBook = async () => {
       try {
         const decodedId = decodeURIComponent(id);
         const record = await getBookData(decodedId);
         if (!record) {
-          alert('Book not found in local library.');
+          alert('Book not found in library.');
           router.push('/');
           return;
         }
@@ -86,40 +139,111 @@ export default function ReaderPage() {
           setTimeout(async () => {
             const { default: ePub } = await import('epubjs');
             const book = ePub(record.data);
-            
+
             if (!viewerRef.current) return;
 
+            // Configure EPUB Rendition with CSS Multi-Column Pagination
             const rend = book.renderTo(viewerRef.current, {
               width: '100%',
               height: '100%',
+              flow: 'paginated',
+              manager: 'default',
               spread: 'none'
             });
 
-            // Register Themes
-            rend.themes.register('canvas', { "body": { "background": "#F5F2EB !important", "color": "#1C2321 !important" }});
-            rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" }});
-            rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" }});
+            renditionRef.current = rend;
 
-            // Apply base styling
-            rend.themes.default({
-              "body": { 
-                "padding": "0 10% !important" 
-              },
-              "p": { 
-                "font-size": "1.15rem !important", 
-                "line-height": "1.8 !important" 
-              }
+            // Apply Themes
+            rend.themes.register('canvas', { "body": { "background": "#F5F2EB !important", "color": "#1C2321 !important" } });
+            rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
+            rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
+
+            // Inject CSS Multi-Column & Typography Rules
+            rend.hooks.content.register((contents) => {
+              const doc = contents.document;
+              if (!doc) return;
+
+              doc.documentElement.setAttribute('lang', record.lang || 'en');
+
+              contents.addStylesheetRules({
+                'html, body': {
+                  'height': '100dvh !important',
+                  'margin': '0 !important',
+                  'padding': '0 !important',
+                  'overflow': 'hidden !important',
+                  '-webkit-font-smoothing': 'antialiased'
+                },
+                'body': {
+                  'column-width': '100vw !important',
+                  'column-gap': '0px !important',
+                  'column-fill': 'auto !important',
+                  'padding': '4vh min(6vw, 60px) !important',
+                  'box-sizing': 'border-box !important',
+                  'hyphens': 'auto !important',
+                  '-webkit-hyphens': 'auto !important',
+                  '-ms-hyphens': 'auto !important',
+                  'orphans': '2 !important',
+                  'widows': '2 !important'
+                },
+                'p, article, section, div, h1, h2, h3, h4': {
+                  'max-width': '65ch !important',
+                  'margin-inline': 'auto !important',
+                  'line-height': '1.8 !important',
+                  'orphans': '2 !important',
+                  'widows': '2 !important'
+                },
+                'p': {
+                  'margin-bottom': '1.25em !important'
+                },
+                'img, svg, video': {
+                  'max-width': '100% !important',
+                  'max-height': '80vh !important',
+                  'object-fit': 'contain !important',
+                  'margin-inline': 'auto !important',
+                  'display': 'block !important'
+                }
+              });
+
+              // Zero-DOM-Bloat Word Lookup on Tap / Click
+              doc.addEventListener('click', (e) => {
+                const width = doc.defaultView?.innerWidth || window.innerWidth;
+                const clickX = e.clientX;
+
+                // Tap navigation zones (left 20% prev, right 20% next)
+                if (clickX < width * 0.2) {
+                  closeAiDictionary();
+                  rend.prev();
+                  return;
+                }
+                if (clickX > width * 0.8) {
+                  closeAiDictionary();
+                  rend.next();
+                  return;
+                }
+
+                // Caret resolution from raw text nodes
+                const res = getWordFromPoint(doc, e.clientX, e.clientY);
+                if (res) {
+                  const iframeRect = doc.defaultView.frameElement.getBoundingClientRect();
+                  const absX = res.rect.left + iframeRect.left;
+                  const absY = res.rect.top + iframeRect.top;
+                  triggerAiDictionary(res.word, res.context, absX, absY, res.rect.width, res.rect.height);
+                } else {
+                  closeAiDictionary();
+                }
+              });
             });
 
-            // Restore last location if saved
+            // Display initial or saved location
             if (record.lastLocation) {
-              rend.display(record.lastLocation);
+              await rend.display(record.lastLocation);
             } else {
-              rend.display();
+              await rend.display();
             }
 
-            // Track location changes and update reading progress percentage
+            // Track location relocation
             rend.on('relocated', (location) => {
+              closeAiDictionary();
               if (location && location.start) {
                 const cfi = location.start.cfi;
                 const pct = Math.round((location.start.percentage || 0) * 100);
@@ -128,37 +252,16 @@ export default function ReaderPage() {
               }
             });
 
-            rend.on('selected', (cfiRange, contents) => {
-              if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
-              
-              selectionTimeoutRef.current = setTimeout(async () => {
-                const range = await rend.book.getRange(cfiRange);
-                const word = range.toString().trim();
-                
-                if (!word) return;
-
-                let contextText = word;
-                if (range.startContainer && range.startContainer.parentNode) {
-                  contextText = range.startContainer.parentNode.textContent || word;
+            // ResizeObserver to re-paginate on window resize, orientation change, or keyboard open
+            if (viewerRef.current) {
+              const observer = new ResizeObserver(() => {
+                if (renditionRef.current) {
+                  renditionRef.current.resize('100%', '100%');
                 }
-                
-                const rect = range.getBoundingClientRect();
-                const iframeRect = contents.document.defaultView.frameElement.getBoundingClientRect();
-                
-                const absoluteX = rect.left + iframeRect.left;
-                const absoluteY = rect.top + iframeRect.top;
-
-                triggerAiDictionary(word, contextText, absoluteX, absoluteY, rect.width, rect.height);
-                
-              }, 500); 
-            });
-
-            rend.on('click', () => {
-               if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
-               closeAiDictionary();
-            });
-
-            renditionRef.current = rend;
+              });
+              observer.observe(viewerRef.current);
+              resizeObserverRef.current = observer;
+            }
           }, 100);
         } else if (record.type === 'pdf') {
           const doc = await loadPDF(record.data);
@@ -170,21 +273,41 @@ export default function ReaderPage() {
         console.error('Failed to load book', err);
       }
     };
+
     initBook();
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+    };
   }, [id, router]);
 
-  // Effect to apply theme and font changes
+  // Handle Theme & Font updates
   useEffect(() => {
     if (renditionRef.current) {
       renditionRef.current.themes.select(readerTheme);
       renditionRef.current.themes.default({
-        "body": { 
+        "body": {
           "font-family": `${fontFamilies[readerFont]} !important`,
-          "padding": "0 10% !important" 
+          "padding": "4vh min(6vw, 60px) !important"
         }
       });
     }
   }, [readerTheme, readerFont]);
+
+  // Keyboard navigation (Left / Right arrow keys)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        handlePagePrev();
+      } else if (e.key === 'ArrowRight') {
+        handlePageNext();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeBook, pdfDoc, pdfCurrentPage]);
 
   const loadPDFPage = async (doc, pageNum, bookIdOverride = null) => {
     try {
@@ -197,7 +320,7 @@ export default function ReaderPage() {
       if (doc.numPages) {
         const pct = Math.round((pageNum / doc.numPages) * 100);
         setProgressPercent(pct);
-        const targetId = bookIdOverride || (activeBook?.id);
+        const targetId = bookIdOverride || activeBook?.id;
         if (targetId) {
           updateReadingProgress(targetId, pct, pageNum);
         }
@@ -232,44 +355,41 @@ export default function ReaderPage() {
   const fabStyle = {
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    background: 'rgba(255, 255, 255, 0.2)',
-    border: '1px solid rgba(0, 0, 0, 0.1)',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    color: 'var(--color-contrast-midnight)',
     position: 'absolute',
     zIndex: 50,
     width: '48px',
     height: '48px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+    boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
     transition: 'transform 0.2s, background 0.2s, color 0.2s'
   };
 
-  // Dynamic inverted fab styling for dark theme readability
   const dynamicFabStyle = {
     ...fabStyle,
-    color: readerTheme === 'dark' ? '#F5F2EB' : 'var(--color-contrast-midnight)',
-    background: readerTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)'
+    color: readerTheme === 'dark' ? '#F5F2EB' : '#1C2321',
+    background: readerTheme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(245, 242, 235, 0.75)',
+    border: readerTheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(28, 35, 33, 0.12)'
   };
 
   if (!activeBook) {
     return (
-      <div className="min-h-screen bg-canvas-light flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-canvas-light flex items-center justify-center">
         <div className="spinner" style={{ width: '32px', height: '32px', border: '2px solid rgba(0,0,0,0.1)', borderTop: '2px solid var(--color-contrast-midnight)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
   }
 
   return (
-    <div style={{ height: '100vh', width: '100%', position: 'relative', overflow: 'hidden', background: themeColors[readerTheme].background }}>
+    <div style={{ height: '100dvh', width: '100vw', position: 'relative', overflow: 'hidden', background: themeColors[readerTheme].background }}>
       
       {/* Top Reading Progress Indicator Badge & Micro Line */}
       <div style={{
         position: 'absolute',
-        top: '24px',
+        top: '20px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 50,
@@ -280,12 +400,12 @@ export default function ReaderPage() {
         pointerEvents: 'none'
       }}>
         <div style={{
-          background: readerTheme === 'dark' ? 'rgba(28, 35, 33, 0.75)' : 'rgba(245, 242, 235, 0.85)',
+          background: readerTheme === 'dark' ? 'rgba(28, 35, 33, 0.85)' : 'rgba(245, 242, 235, 0.9)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           padding: '5px 14px',
           borderRadius: '9999px',
-          border: '1px solid rgba(212, 175, 55, 0.35)',
+          border: '1px solid rgba(212, 175, 55, 0.4)',
           boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
         }}>
           <span style={{
@@ -301,7 +421,7 @@ export default function ReaderPage() {
         <div style={{
           width: '100px',
           height: '3px',
-          background: readerTheme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
+          background: readerTheme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
           borderRadius: '2px',
           overflow: 'hidden'
         }}>
@@ -314,67 +434,69 @@ export default function ReaderPage() {
         </div>
       </div>
 
-      {/* Floating Action Buttons */}
+      {/* Navigation Floating Buttons */}
       <button 
         onClick={() => router.push('/')}
-        style={{ ...dynamicFabStyle, top: '24px', left: '24px' }}
+        style={{ ...dynamicFabStyle, top: '20px', left: '20px' }}
         title="Back to Library"
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <ArrowLeft size={24} />
+        <ArrowLeft size={22} />
       </button>
 
       <button 
         onClick={() => setIsSettingsOpen(true)}
-        style={{ ...dynamicFabStyle, top: '24px', right: '24px' }}
+        style={{ ...dynamicFabStyle, top: '20px', right: '20px' }}
         title="Settings"
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <Settings size={24} />
+        <Settings size={22} />
       </button>
 
       <button 
         onClick={handlePagePrev}
-        style={{ ...dynamicFabStyle, top: '50%', left: '24px', transform: 'translateY(-50%)' }}
+        style={{ ...dynamicFabStyle, top: '50%', left: '20px', transform: 'translateY(-50%)' }}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
       >
-        <ChevronLeft size={24} />
+        <ChevronLeft size={22} />
       </button>
 
       <button 
         onClick={handlePageNext}
-        style={{ ...dynamicFabStyle, top: '50%', right: '24px', transform: 'translateY(-50%)' }}
+        style={{ ...dynamicFabStyle, top: '50%', right: '20px', transform: 'translateY(-50%)' }}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
       >
-        <ChevronRight size={24} />
+        <ChevronRight size={22} />
       </button>
 
-      {/* Reader Containers */}
+      {/* Multi-Column CSS EPUB Container */}
       {activeBook.type === 'epub' ? (
         <div
           ref={viewerRef}
           style={{
-            height: '100vh',
-            width: '100%',
+            height: '100dvh',
+            width: '100vw',
             position: 'absolute',
-            inset: 0
+            inset: 0,
+            overflow: 'hidden'
           }}
         />
       ) : null}
 
+      {/* PDF Container */}
       {activeBook.type === 'pdf' ? (
-        <div style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '100vw', height: '100dvh', position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ 
             width: `${pageDimensions.width}px`, 
             height: `${pageDimensions.height}px`,
             position: 'relative',
-            transform: `scale(min(1, calc(100vw / ${pageDimensions.width + 100}), calc(100vh / ${pageDimensions.height + 150})))`,
+            transform: `scale(min(1, calc(100vw / ${pageDimensions.width + 80}), calc(100dvh / ${pageDimensions.height + 120})))`,
             transformOrigin: 'center center',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
             background: 'white'
           }}>
             {currentPageCanvas ? (
@@ -421,7 +543,7 @@ export default function ReaderPage() {
             inset: 0,
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
-            background: 'rgba(28, 35, 33, 0.4)',
+            background: 'rgba(28, 35, 33, 0.45)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
@@ -433,11 +555,11 @@ export default function ReaderPage() {
             className="glass-panel" 
             style={{ 
               padding: '2rem', 
-              borderRadius: '1rem', 
-              background: 'rgba(255, 255, 255, 0.85)', 
+              borderRadius: '1.25rem', 
+              background: 'rgba(255, 255, 255, 0.9)', 
               minWidth: '320px',
-              border: '1px solid rgba(255,255,255,0.4)',
-              boxShadow: '0 20px 40px -10px rgba(0,0,0,0.2)'
+              border: '1px solid rgba(255,255,255,0.5)',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -453,7 +575,7 @@ export default function ReaderPage() {
             
             <div className="text-core text-contrast-midnight/80 mb-6 space-y-6">
               <div>
-                <label className="text-xs uppercase tracking-widest text-contrast-midnight/50 block mb-3">Typography</label>
+                <label className="text-xs uppercase tracking-widest text-contrast-midnight/50 block mb-3 font-semibold">Typography</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button 
                     onClick={() => setReaderFont('serif')}
@@ -483,7 +605,7 @@ export default function ReaderPage() {
               </div>
               
               <div>
-                <label className="text-xs uppercase tracking-widest text-contrast-midnight/50 block mb-3">Canvas Tone</label>
+                <label className="text-xs uppercase tracking-widest text-contrast-midnight/50 block mb-3 font-semibold">Canvas Tone</label>
                 <div style={{ display: 'flex', gap: '16px' }}>
                   <div 
                     onClick={() => setReaderTheme('canvas')}
@@ -515,7 +637,7 @@ export default function ReaderPage() {
             
             <button 
               onClick={() => setIsSettingsOpen(false)} 
-              className="btn-premium w-full flex justify-center py-3"
+              className="btn-premium w-full flex justify-center py-3 font-semibold"
               style={{ transition: 'transform 0.2s', marginTop: '16px' }}
               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
