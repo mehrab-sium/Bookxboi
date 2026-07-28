@@ -1,7 +1,272 @@
-// Client-Side IndexedDB Storage for Book Files
+// Client-Side IndexedDB Storage & Progress Persistence for Books
 const DB_NAME = 'PremiumReaderLibraryDB';
 const STORE_NAME = 'books';
 const DB_VERSION = 1;
+
+// Curated Masterpiece Public Books served online from /books/
+export const PUBLIC_BOOKS = [
+  {
+    id: 'pub-ali-madonna',
+    name: 'Madonna in a Fur Coat',
+    author: 'Sabahattin Ali',
+    fileName: 'Ali_Madonna_in_a_Fur_Coat.epub',
+    url: '/books/Ali_Madonna_in_a_Fur_Coat.epub',
+    type: 'epub',
+    addedAt: 1700000001000
+  },
+  {
+    id: 'pub-bronte-jane-eyre',
+    name: 'Jane Eyre',
+    author: 'Charlotte Brontë',
+    fileName: 'Bronte_Jane_Eyre.epub',
+    url: '/books/Bronte_Jane_Eyre.epub',
+    type: 'epub',
+    addedAt: 1700000002000
+  },
+  {
+    id: 'pub-bronte-wuthering-heights',
+    name: 'Wuthering Heights',
+    author: 'Emily Brontë',
+    fileName: 'Bronte_Wuthering_Heights.epub',
+    url: '/books/Bronte_Wuthering_Heights.epub',
+    type: 'epub',
+    addedAt: 1700000003000
+  },
+  {
+    id: 'pub-camus-myth-of-sisyphus',
+    name: 'The Myth of Sisyphus',
+    author: 'Albert Camus',
+    fileName: 'Camus_The_Myth_of_Sisyphus_and_Other_Essays.epub',
+    url: '/books/Camus_The_Myth_of_Sisyphus_and_Other_Essays.epub',
+    type: 'epub',
+    addedAt: 1700000004000
+  },
+  {
+    id: 'pub-camus-plague',
+    name: 'The Plague',
+    author: 'Albert Camus',
+    fileName: 'Camus_The_Plague.epub',
+    url: '/books/Camus_The_Plague.epub',
+    type: 'epub',
+    addedAt: 1700000005000
+  },
+  {
+    id: 'pub-dazai-no-longer-human',
+    name: 'No Longer Human',
+    author: 'Osamu Dazai',
+    fileName: 'Dazai_No_Longer_Human.epub',
+    url: '/books/Dazai_No_Longer_Human.epub',
+    type: 'epub',
+    addedAt: 1700000006000
+  },
+  {
+    id: 'pub-dickens-tale-of-two-cities',
+    name: 'A Tale of Two Cities',
+    author: 'Charles Dickens',
+    fileName: 'Dickens_A_Tale_of_Two_Cities.epub',
+    url: '/books/Dickens_A_Tale_of_Two_Cities.epub',
+    type: 'epub',
+    addedAt: 1700000007000
+  },
+  {
+    id: 'pub-dostoevsky-idiot',
+    name: 'The Idiot',
+    author: 'Fyodor Dostoevsky',
+    fileName: 'Dostoevsky_The_Idiot.epub',
+    url: '/books/Dostoevsky_The_Idiot.epub',
+    type: 'epub',
+    addedAt: 1700000008000
+  },
+  {
+    id: 'pub-dostoyevsky-crime-and-punishment',
+    name: 'Crime and Punishment',
+    author: 'Fyodor Dostoevsky',
+    fileName: 'Dostoyevsky_Crime_and_Punishment.epub',
+    url: '/books/Dostoyevsky_Crime_and_Punishment.epub',
+    type: 'epub',
+    addedAt: 1700000009000
+  },
+  {
+    id: 'pub-dostoyevsky-notes-from-underground',
+    name: 'Notes from Underground',
+    author: 'Fyodor Dostoevsky',
+    fileName: 'Dostoyevsky_Notes_From_Underground.epub',
+    url: '/books/Dostoyevsky_Notes_From_Underground.epub',
+    type: 'epub',
+    addedAt: 1700000010000
+  },
+  {
+    id: 'pub-dostoyevsky-brothers-karamazov',
+    name: 'The Brothers Karamazov',
+    author: 'Fyodor Dostoevsky',
+    fileName: 'Dostoyevsky_The_Brothers_Karamazov.epub',
+    url: '/books/Dostoyevsky_The_Brothers_Karamazov.epub',
+    type: 'epub',
+    addedAt: 1700000011000
+  },
+  {
+    id: 'pub-dostoyevsky-white-nights',
+    name: 'White Nights',
+    author: 'Fyodor Dostoevsky',
+    fileName: 'Dostoyevsky_White_Nights.epub',
+    url: '/books/Dostoyevsky_White_Nights.epub',
+    type: 'epub',
+    addedAt: 1700000012000
+  },
+  {
+    id: 'pub-goethe-werther',
+    name: 'The Sorrows of Young Werther',
+    author: 'J. W. von Goethe',
+    fileName: 'Goethe_Sorrows_of_Young_Werther.epub',
+    url: '/books/Goethe_Sorrows_of_Young_Werther.epub',
+    type: 'epub',
+    addedAt: 1700000013000
+  },
+  {
+    id: 'pub-huxley-brave-new-world',
+    name: 'Brave New World',
+    author: 'Aldous Huxley',
+    fileName: 'Huxley_Brave_New_World.epub',
+    url: '/books/Huxley_Brave_New_World.epub',
+    type: 'epub',
+    addedAt: 1700000014000
+  },
+  {
+    id: 'pub-kafka-metamorphosis',
+    name: 'The Metamorphosis',
+    author: 'Franz Kafka',
+    fileName: 'Kafka_Metamorphosis.epub',
+    url: '/books/Kafka_Metamorphosis.epub',
+    type: 'epub',
+    addedAt: 1700000015000
+  },
+  {
+    id: 'pub-kafka-trial',
+    name: 'The Trial',
+    author: 'Franz Kafka',
+    fileName: 'Kafka_The_Trial.epub',
+    url: '/books/Kafka_The_Trial.epub',
+    type: 'epub',
+    addedAt: 1700000016000
+  },
+  {
+    id: 'pub-kierkegaard-fear-and-trembling',
+    name: 'Fear and Trembling',
+    author: 'Søren Kierkegaard',
+    fileName: 'Kierkegaard_Fear_and_Trembling.epub',
+    url: '/books/Kierkegaard_Fear_and_Trembling.epub',
+    type: 'epub',
+    addedAt: 1700000017000
+  },
+  {
+    id: 'pub-machiavelli-prince',
+    name: 'The Prince',
+    author: 'Niccolò Machiavelli',
+    fileName: 'Machiavelli_The_Prince.epub',
+    url: '/books/Machiavelli_The_Prince.epub',
+    type: 'epub',
+    addedAt: 1700000018000
+  },
+  {
+    id: 'pub-marcus-aurelius-meditations',
+    name: 'Meditations',
+    author: 'Marcus Aurelius',
+    fileName: 'Marcus_Aurelius_Meditations.epub',
+    url: '/books/Marcus_Aurelius_Meditations.epub',
+    type: 'epub',
+    addedAt: 1700000019000
+  },
+  {
+    id: 'pub-nietzsche-beyond-good-and-evil',
+    name: 'Beyond Good and Evil',
+    author: 'Friedrich Nietzsche',
+    fileName: 'Nietzsche_Beyond_Good_and_Evil.epub',
+    url: '/books/Nietzsche_Beyond_Good_and_Evil.epub',
+    type: 'epub',
+    addedAt: 1700000020000
+  },
+  {
+    id: 'pub-nietzsche-thus-spoke-zarathustra',
+    name: 'Thus Spoke Zarathustra',
+    author: 'Friedrich Nietzsche',
+    fileName: 'Nietzsche_Thus_Spoke_Zarathustra.epub',
+    url: '/books/Nietzsche_Thus_Spoke_Zarathustra.epub',
+    type: 'epub',
+    addedAt: 1700000021000
+  },
+  {
+    id: 'pub-orwell-1984',
+    name: '1984',
+    author: 'George Orwell',
+    fileName: 'Orwell_1984.epub',
+    url: '/books/Orwell_1984.epub',
+    type: 'epub',
+    addedAt: 1700000022000
+  },
+  {
+    id: 'pub-plath-bell-jar',
+    name: 'The Bell Jar',
+    author: 'Sylvia Plath',
+    fileName: 'Plath_The_Bell_Jar.epub',
+    url: '/books/Plath_The_Bell_Jar.epub',
+    type: 'epub',
+    addedAt: 1700000023000
+  },
+  {
+    id: 'pub-steinbeck-east-of-eden',
+    name: 'East of Eden',
+    author: 'John Steinbeck',
+    fileName: 'Steinbeck_East_of_Eden.epub',
+    url: '/books/Steinbeck_East_of_Eden.epub',
+    type: 'epub',
+    addedAt: 1700000024000
+  },
+  {
+    id: 'pub-steinbeck-pearl',
+    name: 'The Pearl',
+    author: 'John Steinbeck',
+    fileName: 'Steinbeck_The_Pearl.epub',
+    url: '/books/Steinbeck_The_Pearl.epub',
+    type: 'epub',
+    addedAt: 1700000025000
+  },
+  {
+    id: 'pub-tolstoy-anna-karenina',
+    name: 'Anna Karenina',
+    author: 'Leo Tolstoy',
+    fileName: 'Tolstoy_Anna_Karenina.epub',
+    url: '/books/Tolstoy_Anna_Karenina.epub',
+    type: 'epub',
+    addedAt: 1700000026000
+  },
+  {
+    id: 'pub-wilde-picture-of-dorian-gray',
+    name: 'The Picture of Dorian Gray',
+    author: 'Oscar Wilde',
+    fileName: 'Wilde_The_Picture_of_Dorian_Gray.epub',
+    url: '/books/Wilde_The_Picture_of_Dorian_Gray.epub',
+    type: 'epub',
+    addedAt: 1700000027000
+  },
+  {
+    id: 'pub-woolf-mrs-dalloway',
+    name: 'Mrs. Dalloway',
+    author: 'Virginia Woolf',
+    fileName: 'Woolf_Mrs_Dalloway.epub',
+    url: '/books/Woolf_Mrs_Dalloway.epub',
+    type: 'epub',
+    addedAt: 1700000028000
+  },
+  {
+    id: 'sample-pdf',
+    name: 'Aetherius: Architecture of Light',
+    author: 'Aetherius Editorial',
+    fileName: 'sample-pdf',
+    url: 'sample-pdf',
+    type: 'pdf',
+    addedAt: 1700000000000
+  }
+];
 
 function getDB() {
   return new Promise((resolve, reject) => {
@@ -23,7 +288,7 @@ function getDB() {
 
 export async function saveBook(name, type, data, coverImage = null) {
   const db = await getDB();
-  const id = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const id = `${type}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   const book = {
     id,
     name,
@@ -31,7 +296,10 @@ export async function saveBook(name, type, data, coverImage = null) {
     type,
     addedAt: Date.now(),
     data,
-    coverImage
+    coverImage,
+    progressPercent: 0,
+    lastLocation: null,
+    lastReadAt: null
   };
 
   return new Promise((resolve, reject) => {
@@ -43,50 +311,203 @@ export async function saveBook(name, type, data, coverImage = null) {
   });
 }
 
+export async function updateReadingProgress(id, progressPercent, lastLocation = null) {
+  if (!id) return;
+  const roundedProgress = Math.min(100, Math.max(0, Math.round(progressPercent || 0)));
+  const progressData = {
+    progressPercent: roundedProgress,
+    lastLocation,
+    lastReadAt: Date.now()
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`book_progress_${id}`, JSON.stringify(progressData));
+    } catch (e) {
+      console.warn('Could not save progress to localStorage:', e);
+    }
+  }
+
+  try {
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(id);
+    req.onsuccess = () => {
+      const record = req.result;
+      if (record) {
+        record.progressPercent = roundedProgress;
+        record.lastLocation = lastLocation;
+        record.lastReadAt = Date.now();
+        store.put(record);
+      }
+    };
+  } catch (err) {
+    console.error('Error updating reading progress in IndexedDB:', err);
+  }
+}
+
+export function getLocalProgress(id) {
+  if (typeof window === 'undefined' || !id) return null;
+  try {
+    const raw = localStorage.getItem(`book_progress_${id}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 export async function getAllBooks() {
   try {
     const db = await getDB();
-    return new Promise((resolve, reject) => {
+    const userBooks = await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
       const req = store.getAll();
       req.onsuccess = () => {
-        const list = req.result.map(({ id, name, size, type, addedAt, coverImage }) => ({
-          id,
-          name,
-          size,
-          type,
-          addedAt,
-          coverImage
-        }));
+        const list = req.result.map(({ id, name, author, size, type, addedAt, coverImage, progressPercent, lastLocation, lastReadAt }) => {
+          const localProg = getLocalProgress(id);
+          return {
+            id,
+            name,
+            author,
+            size,
+            type,
+            addedAt,
+            coverImage,
+            progressPercent: localProg?.progressPercent ?? progressPercent ?? 0,
+            lastLocation: localProg?.lastLocation ?? lastLocation ?? null,
+            lastReadAt: localProg?.lastReadAt ?? lastReadAt ?? null
+          };
+        });
         resolve(list);
       };
       req.onerror = () => reject(req.error);
     });
+
+    const allBooks = [...userBooks];
+    for (const pub of PUBLIC_BOOKS) {
+      if (!allBooks.some(b => b.id === pub.id)) {
+        const localProg = getLocalProgress(pub.id);
+        allBooks.push({
+          ...pub,
+          progressPercent: localProg?.progressPercent ?? 0,
+          lastLocation: localProg?.lastLocation ?? null,
+          lastReadAt: localProg?.lastReadAt ?? null
+        });
+      }
+    }
+    return allBooks;
   } catch (err) {
     console.error('Error listing books:', err);
-    return [];
+    return PUBLIC_BOOKS.map(pub => {
+      const localProg = getLocalProgress(pub.id);
+      return {
+        ...pub,
+        progressPercent: localProg?.progressPercent ?? 0,
+        lastLocation: localProg?.lastLocation ?? null,
+        lastReadAt: localProg?.lastReadAt ?? null
+      };
+    });
   }
 }
 
 export async function getBookData(id) {
+  // Check if it matches a public book
+  const pub = PUBLIC_BOOKS.find(b => b.id === id);
+  if (pub) {
+    const localProg = getLocalProgress(id);
+    
+    // Check if cached in IndexedDB first
+    try {
+      const db = await getDB();
+      const cached = await new Promise((resolve) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+      if (cached && cached.data) {
+        return {
+          ...cached,
+          progressPercent: localProg?.progressPercent ?? cached.progressPercent ?? 0,
+          lastLocation: localProg?.lastLocation ?? cached.lastLocation ?? null
+        };
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    if (pub.id === 'sample-pdf') {
+      return {
+        ...pub,
+        data: 'sample-pdf',
+        progressPercent: localProg?.progressPercent ?? 0,
+        lastLocation: localProg?.lastLocation ?? null
+      };
+    }
+
+    // Fetch arrayBuffer for public EPUB file
+    try {
+      const res = await fetch(pub.url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const arrayBuffer = await res.arrayBuffer();
+
+      const record = {
+        ...pub,
+        data: arrayBuffer,
+        progressPercent: localProg?.progressPercent ?? 0,
+        lastLocation: localProg?.lastLocation ?? null
+      };
+
+      // Cache in IndexedDB for fast offline loading
+      try {
+        const db = await getDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.put(record);
+      } catch (e) {}
+
+      return record;
+    } catch (err) {
+      console.error(`Failed to fetch public book ${pub.url}:`, err);
+      throw err;
+    }
+  }
+
+  // Otherwise check user database
   const db = await getDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
     const store = tx.objectStore(STORE_NAME);
     const req = store.get(id);
-    req.onsuccess = () => resolve(req.result || null);
+    req.onsuccess = () => {
+      const result = req.result;
+      if (result) {
+        const localProg = getLocalProgress(id);
+        result.progressPercent = localProg?.progressPercent ?? result.progressPercent ?? 0;
+        result.lastLocation = localProg?.lastLocation ?? result.lastLocation ?? null;
+      }
+      resolve(result || null);
+    };
     req.onerror = () => reject(req.error);
   });
 }
 
 export async function deleteBook(id) {
+  if (PUBLIC_BOOKS.some(b => b.id === id)) return;
   const db = await getDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
     const req = store.delete(id);
-    req.onsuccess = () => resolve();
+    req.onsuccess = () => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(`book_progress_${id}`);
+      }
+      resolve();
+    };
     req.onerror = () => reject(req.error);
   });
 }

@@ -201,14 +201,14 @@ export default function Book3D({
         <ambientLight intensity={1.5} />
         <directionalLight position={[2, 5, 3]} intensity={1.0} castShadow />
         
-        {currentPageCanvas && nextPageCanvas && (
+        {(currentPageCanvas && nextPageCanvas) ? (
           <PageMesh
             currentPageCanvas={currentPageCanvas}
             nextPageCanvas={nextPageCanvas}
             isAnimating={isAnimating}
             onAnimationComplete={onAnimationComplete}
           />
-        )}
+        ) : null}
       </Canvas>
     </div>
   );

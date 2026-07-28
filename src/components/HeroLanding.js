@@ -59,7 +59,12 @@ export default function HeroLanding({ setView }) {
   }, []);
 
   const handleEnterLibrary = () => {
-    if (setView) setView('app');
+    const archiveEl = document.getElementById('archive');
+    if (archiveEl) {
+      archiveEl.scrollIntoView({ behavior: 'smooth' });
+    } else if (setView) {
+      setView('app');
+    }
   };
 
   const handleBtnEnter = (e) => {
@@ -126,7 +131,7 @@ export default function HeroLanding({ setView }) {
       <div className="sticky top-0 w-full h-screen flex flex-col lg:flex-row items-center justify-between px-6 lg:px-12 py-24 gap-12 overflow-hidden pointer-events-none">
         
         {/* Massive Typography - Left Aligned with negative space */}
-        <div className="flex-1 flex flex-col justify-center items-start text-left relative z-10 w-full h-full pt-16 pl-6 lg:pl-32 xl:pl-40 text-container pointer-events-auto">
+        <div className="flex-1 flex flex-col justify-center items-start text-left relative z-10 w-full h-full pt-32 sm:pt-36 lg:pt-28 pl-6 lg:pl-32 xl:pl-40 text-container pointer-events-auto">
           
           <div className="relative mb-0" style={{ zIndex: 20 }}>
             {/* 2. Typography Contrast with Crisp Drop Shadows */}

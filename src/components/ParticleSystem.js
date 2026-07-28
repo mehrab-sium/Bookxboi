@@ -25,7 +25,7 @@ export default function ParticleSystem() {
       canvas.height = height * dpr;
       ctx.scale(dpr, dpr);
     };
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', resize, { passive: true });
 
     // Mouse Tracking Logic
     let mouse = { x: -1000, y: -1000, radius: 100 };
@@ -37,8 +37,8 @@ export default function ParticleSystem() {
       mouse.x = -1000;
       mouse.y = -1000;
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
 
     const particles = Array.from({ length: 45 }).map(() => ({
       x: Math.random() * width,

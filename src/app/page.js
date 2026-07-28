@@ -1,67 +1,45 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import dynamic from 'next/dynamic';
-import gsap from 'gsap';
 import GlobalHeader from '../components/GlobalHeader';
 import HeroLanding from '../components/HeroLanding';
 import ParticleSystem from '../components/ParticleSystem';
-
 import Footer from '../components/Footer';
 
 const ReaderApp = dynamic(() => import('../components/ReaderApp'), { ssr: false });
 
 export default function Home() {
-  const [view, setView] = useState('landing'); // 'landing' | 'transitioning' | 'app'
   const containerRef = useRef(null);
 
-  const handleSetView = (newView) => {
-    if (newView === 'app' && view === 'landing') {
-      setView('transitioning');
-      
-      // GSAP "Slack" Animation before mounting Library
-      gsap.to('.hero-transition-wrapper', {
-        scale: 0.95,
-        opacity: 0,
-        y: 30,
-        duration: 0.5,
-        ease: 'power2.inOut',
-        onComplete: () => {
-          setView('app');
-        }
-      });
-    } else {
-      setView(newView);
+  const handleSetView = (targetView) => {
+    if (targetView === 'app' || targetView === 'archive') {
+      const archiveEl = document.getElementById('archive');
+      if (archiveEl) {
+        archiveEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else if (targetView === 'landing') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  // When returning to landing from app
-  useEffect(() => {
-    if (view === 'landing') {
-      gsap.fromTo('.hero-transition-wrapper', 
-        { scale: 0.95, opacity: 0, y: 30 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
-      );
-    }
-  }, [view]);
-
   return (
-    <main ref={containerRef} className={`min-h-screen ${view === 'app' ? 'bg-[#F5F2EB]' : 'bg-transparent'}`}>
+    <main ref={containerRef} className="min-h-screen bg-[#F5F2EB] text-[#1C2321] relative overflow-x-hidden">
       <GlobalHeader setView={handleSetView} />
       
-      {/* Global Particle System */}
-      {(view === 'landing' || view === 'transitioning') ? <ParticleSystem /> : null}
+      {/* Global Ambient Particle System */}
+      <ParticleSystem />
       
-      {(view === 'landing' || view === 'transitioning') ? (
-        <div className="hero-transition-wrapper">
-          <HeroLanding setView={handleSetView} />
-          <Footer />
-        </div>
-      ) : null}
-
-      {view === 'app' ? (
+      {/* Hero Landing Section */}
+      <HeroLanding setView={handleSetView} />
+      
+      {/* Library Archive Body Section (Continuous Scroll down with GSAP showcase) */}
+      <div className="relative z-10 bg-[#F5F2EB]/90 backdrop-blur-md border-t border-contrast-midnight/10 shadow-[0_-20px_50px_rgba(0,0,0,0.15)]">
         <ReaderApp />
-      ) : null}
+      </div>
+
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }

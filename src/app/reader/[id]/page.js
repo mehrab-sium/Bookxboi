@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Settings, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { getBookData } from '../../../lib/libraryStore';
+import { getBookData, updateReadingProgress } from '../../../lib/libraryStore';
 import GlassTooltip from '../../../components/GlassTooltip';
 import TextSelectionLayer from '../../../components/TextSelectionLayer';
 import { loadPDF, getPDFPageData } from '../../../lib/pdfLoader';
@@ -14,6 +14,7 @@ export default function ReaderPage() {
   const router = useRouter();
   
   const [activeBook, setActiveBook] = useState(null);
+  const [progressPercent, setProgressPercent] = useState(0);
   const viewerRef = useRef(null);
   const renditionRef = useRef(null);
   const selectionTimeoutRef = useRef(null);
@@ -69,13 +70,17 @@ export default function ReaderPage() {
     
     const initBook = async () => {
       try {
-        const record = await getBookData(decodeURIComponent(id));
+        const decodedId = decodeURIComponent(id);
+        const record = await getBookData(decodedId);
         if (!record) {
           alert('Book not found in local library.');
           router.push('/');
           return;
         }
         setActiveBook(record);
+        if (record.progressPercent) {
+          setProgressPercent(record.progressPercent);
+        }
 
         if (record.type === 'epub') {
           setTimeout(async () => {
@@ -103,6 +108,23 @@ export default function ReaderPage() {
               "p": { 
                 "font-size": "1.15rem !important", 
                 "line-height": "1.8 !important" 
+              }
+            });
+
+            // Restore last location if saved
+            if (record.lastLocation) {
+              rend.display(record.lastLocation);
+            } else {
+              rend.display();
+            }
+
+            // Track location changes and update reading progress percentage
+            rend.on('relocated', (location) => {
+              if (location && location.start) {
+                const cfi = location.start.cfi;
+                const pct = Math.round((location.start.percentage || 0) * 100);
+                setProgressPercent(pct);
+                updateReadingProgress(decodedId, pct, cfi);
               }
             });
 
@@ -136,13 +158,13 @@ export default function ReaderPage() {
                closeAiDictionary();
             });
 
-            rend.display();
             renditionRef.current = rend;
           }, 100);
         } else if (record.type === 'pdf') {
           const doc = await loadPDF(record.data);
           setPdfDoc(doc);
-          await loadPDFPage(doc, 1);
+          const startPage = typeof record.lastLocation === 'number' ? record.lastLocation : 1;
+          await loadPDFPage(doc, startPage, decodedId);
         }
       } catch (err) {
         console.error('Failed to load book', err);
@@ -164,13 +186,22 @@ export default function ReaderPage() {
     }
   }, [readerTheme, readerFont]);
 
-  const loadPDFPage = async (doc, pageNum) => {
+  const loadPDFPage = async (doc, pageNum, bookIdOverride = null) => {
     try {
       const pageData = await getPDFPageData(doc, pageNum, 540, 720);
       setTextItems(pageData.textItems);
       setCurrentPageCanvas(pageData.canvas);
       setPageDimensions({ width: pageData.width, height: pageData.height });
       setPdfCurrentPage(pageNum);
+
+      if (doc.numPages) {
+        const pct = Math.round((pageNum / doc.numPages) * 100);
+        setProgressPercent(pct);
+        const targetId = bookIdOverride || (activeBook?.id);
+        if (targetId) {
+          updateReadingProgress(targetId, pct, pageNum);
+        }
+      }
     } catch (err) {
       console.error('Error loading PDF page:', err);
     }
@@ -235,6 +266,54 @@ export default function ReaderPage() {
   return (
     <div style={{ height: '100vh', width: '100%', position: 'relative', overflow: 'hidden', background: themeColors[readerTheme].background }}>
       
+      {/* Top Reading Progress Indicator Badge & Micro Line */}
+      <div style={{
+        position: 'absolute',
+        top: '24px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 50,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '4px',
+        pointerEvents: 'none'
+      }}>
+        <div style={{
+          background: readerTheme === 'dark' ? 'rgba(28, 35, 33, 0.75)' : 'rgba(245, 242, 235, 0.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          padding: '5px 14px',
+          borderRadius: '9999px',
+          border: '1px solid rgba(212, 175, 55, 0.35)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+        }}>
+          <span style={{
+            fontSize: '11px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            fontWeight: 600,
+            color: readerTheme === 'dark' ? '#F5F2EB' : '#1C2321'
+          }}>
+            {progressPercent}% Read
+          </span>
+        </div>
+        <div style={{
+          width: '100px',
+          height: '3px',
+          background: readerTheme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
+          borderRadius: '2px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: `${progressPercent}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #d4af37 0%, #f5f2eb 100%)',
+            transition: 'width 0.3s ease'
+          }} />
+        </div>
+      </div>
+
       {/* Floating Action Buttons */}
       <button 
         onClick={() => router.push('/')}
@@ -275,7 +354,7 @@ export default function ReaderPage() {
       </button>
 
       {/* Reader Containers */}
-      {activeBook.type === 'epub' && (
+      {activeBook.type === 'epub' ? (
         <div
           ref={viewerRef}
           style={{
@@ -285,9 +364,9 @@ export default function ReaderPage() {
             inset: 0
           }}
         />
-      )}
+      ) : null}
 
-      {activeBook.type === 'pdf' && (
+      {activeBook.type === 'pdf' ? (
         <div style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ 
             width: `${pageDimensions.width}px`, 
@@ -298,7 +377,7 @@ export default function ReaderPage() {
             boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
             background: 'white'
           }}>
-            {currentPageCanvas && (
+            {currentPageCanvas ? (
               <canvas
                 ref={(el) => {
                   if (el && currentPageCanvas) {
@@ -310,7 +389,7 @@ export default function ReaderPage() {
                 }}
                 style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
               />
-            )}
+            ) : null}
             <TextSelectionLayer
               textItems={textItems}
               pageWidth={pageDimensions.width}
@@ -321,10 +400,10 @@ export default function ReaderPage() {
             />
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* GlassTooltip Overlay */}
-      {selectedWord && selectionRect && (
+      {(selectedWord && selectionRect) ? (
         <GlassTooltip 
           word={selectedWord} 
           rect={selectionRect} 
@@ -332,10 +411,10 @@ export default function ReaderPage() {
           dictionaryLang="both"
           onClose={closeAiDictionary}
         />
-      )}
+      ) : null}
 
       {/* Settings Modal */}
-      {isSettingsOpen && (
+      {isSettingsOpen ? (
         <div 
           style={{
             position: 'absolute',
@@ -445,7 +524,7 @@ export default function ReaderPage() {
             </button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

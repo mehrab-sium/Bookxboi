@@ -32,7 +32,12 @@ export default function GlobalHeader({ setView }) {
 
   const handleLibraryClick = (e) => {
     e.preventDefault();
-    if (setView) setView('app');
+    const archiveEl = document.getElementById('archive');
+    if (archiveEl) {
+      archiveEl.scrollIntoView({ behavior: 'smooth' });
+    } else if (setView) {
+      setView('app');
+    }
     setIsMenuOpen(false);
   };
 
@@ -196,18 +201,18 @@ export default function GlobalHeader({ setView }) {
         </div>
 
         {/* Mobile Menu Overlay */}
-        {isMenuOpen && (
+        {isMenuOpen ? (
           <div className="fixed inset-0 bg-contrast-midnight text-canvas-light flex flex-col items-center justify-center gap-8 z-40 pointer-events-auto">
             <a href="#" onClick={handleLibraryClick} className="text-soul text-4xl">Library</a>
             <a href="#" className="text-soul text-4xl">Journals</a>
             <a href="#" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); setIsAboutOpen(true); }} className="text-soul text-4xl">About</a>
             <a href="#" className="text-soul text-4xl">Preferences</a>
           </div>
-        )}
+        ) : null}
       </header>
 
       {/* About Overlay */}
-      {isAboutOpen && (
+      {isAboutOpen ? (
         <div 
           ref={aboutOverlayRef} 
           className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-contrast-midnight/40 pointer-events-auto"
@@ -233,7 +238,7 @@ export default function GlobalHeader({ setView }) {
             </p>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
