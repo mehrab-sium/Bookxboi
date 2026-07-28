@@ -2,7 +2,24 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Settings, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Settings, 
+  ChevronLeft, 
+  ChevronRight, 
+  X, 
+  Type, 
+  Sliders, 
+  Sun, 
+  Moon, 
+  Feather, 
+  Minus, 
+  Plus, 
+  RotateCcw, 
+  Check, 
+  BookOpen,
+  AlignLeft
+} from 'lucide-react';
 import { getBookData, updateReadingProgress } from '../../../lib/libraryStore';
 import GlassTooltip from '../../../components/GlassTooltip';
 import TextSelectionLayer from '../../../components/TextSelectionLayer';
@@ -22,20 +39,59 @@ export default function ReaderPage() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Settings State
+  // Settings State (Persisted in localStorage)
   const [readerTheme, setReaderTheme] = useState('canvas');
-  const [readerFont, setReaderFont] = useState('serif');
+  const [readerFont, setReaderFont] = useState('garamond');
+  const [fontSizePercent, setFontSizePercent] = useState(50); // 0% = 12px / 75%, 50% = 18px / 100%, 100% = 28px / 155%
+  const [lineHeight, setLineHeight] = useState(1.75);
 
+  // Load saved preferences on mount
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('bookxboi_theme');
+      const savedFont = localStorage.getItem('bookxboi_font');
+      const savedSize = localStorage.getItem('bookxboi_size');
+      const savedLineHeight = localStorage.getItem('bookxboi_lineheight');
+
+      if (savedTheme) setReaderTheme(savedTheme);
+      if (savedFont && fontCatalog[savedFont]) setReaderFont(savedFont);
+      if (savedSize) setFontSizePercent(Number(savedSize));
+      if (savedLineHeight) setLineHeight(Number(savedLineHeight));
+    } catch (e) {}
+  }, []);
+
+  // Save preferences
+  const updateSetting = (key, value, setter) => {
+    setter(value);
+    try {
+      localStorage.setItem(`bookxboi_${key}`, value);
+    } catch (e) {}
+  };
+
+  // Theme Tones Catalog
   const themeColors = {
-    canvas: { background: '#F5F2EB', color: '#1C2321', cardBg: '#FAF8F5', border: 'rgba(28, 35, 33, 0.12)' },
-    dark: { background: '#111413', color: '#F5F2EB', cardBg: '#1C2321', border: 'rgba(245, 242, 235, 0.15)' },
-    white: { background: '#F9F9FB', color: '#1C2321', cardBg: '#FFFFFF', border: 'rgba(0, 0, 0, 0.08)' }
+    canvas: { name: 'Sepia Canvas', background: '#F5F2EB', color: '#1C2321', cardBg: '#FAF8F5', border: 'rgba(28, 35, 33, 0.12)' },
+    dark: { name: 'Charcoal', background: '#111413', color: '#F5F2EB', cardBg: '#1C2321', border: 'rgba(245, 242, 235, 0.15)' },
+    oled: { name: 'OLED Black', background: '#000000', color: '#E5E5E5', cardBg: '#0A0A0A', border: 'rgba(255, 255, 255, 0.2)' },
+    parchment: { name: 'Parchment', background: '#FAF6EE', color: '#2B261F', cardBg: '#FFFDF9', border: 'rgba(43, 38, 31, 0.12)' },
+    white: { name: 'Crisp White', background: '#F9F9FB', color: '#1C2321', cardBg: '#FFFFFF', border: 'rgba(0, 0, 0, 0.08)' }
   };
 
-  const fontFamilies = {
-    serif: 'Georgia, Ogg, "Times New Roman", serif',
-    sans: 'var(--font-sans), system-ui, sans-serif'
+  // Google Fonts Catalog
+  const fontCatalog = {
+    garamond: { name: 'EB Garamond', family: "'EB Garamond', Georgia, serif", category: 'Serif Classic' },
+    lora: { name: 'Lora', family: "'Lora', Georgia, serif", category: 'Modern Serif' },
+    spectral: { name: 'Spectral', family: "'Spectral', Georgia, serif", category: 'Luxury Serif' },
+    georgia: { name: 'Georgia', family: "Georgia, 'Times New Roman', serif", category: 'Traditional' },
+    inter: { name: 'Inter', family: "'Inter', system-ui, sans-serif", category: 'Modern Sans' },
+    jakarta: { name: 'Plus Jakarta', family: "'Plus Jakarta Sans', sans-serif", category: 'Clean Sans' },
+    hyperlegible: { name: 'Atkinson', family: "'Atkinson Hyperlegible', sans-serif", category: 'Dyslexic Friendly' },
+    mono: { name: 'JetBrains', family: "'JetBrains Mono', monospace", category: 'Monospace' }
   };
+
+  // Convert fontSizePercent (0 to 100) to pixel size (12px to 28px) and EPUB scale (75% to 155%)
+  const calculatedPxSize = Math.round(12 + (fontSizePercent / 100) * 16);
+  const calculatedEpubScale = `${Math.round(75 + (fontSizePercent / 100) * 80)}%`;
 
   // PDF Reader State
   const [pdfDoc, setPdfDoc] = useState(null);
@@ -212,12 +268,15 @@ export default function ReaderPage() {
 
             renditionRef.current = rend;
 
-            // Apply Themes
+            // Register Themes
             rend.themes.register('canvas', { "body": { "background": "#FAF8F5 !important", "color": "#1C2321 !important" } });
             rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
+            rend.themes.register('oled', { "body": { "background": "#000000 !important", "color": "#E5E5E5 !important" } });
+            rend.themes.register('parchment', { "body": { "background": "#FFFDF9 !important", "color": "#2B261F !important" } });
             rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
 
-            // Zero iframe body padding to prevent EPUB.js column transform calculation failures
+            // Apply selected font, size, and line-height
+            const fontObj = fontCatalog[readerFont] || fontCatalog.garamond;
             rend.themes.default({
               "html, body": {
                 "margin": "0 !important",
@@ -226,8 +285,9 @@ export default function ReaderPage() {
                 "box-sizing": "border-box !important"
               },
               "p, div, span, blockquote": {
-                "font-family": `${fontFamilies[readerFont]} !important`,
-                "line-height": "1.75 !important"
+                "font-family": `${fontObj.family} !important`,
+                "font-size": `${calculatedEpubScale} !important`,
+                "line-height": `${lineHeight} !important`
               },
               "img, svg": {
                 "max-width": "100% !important",
@@ -235,6 +295,8 @@ export default function ReaderPage() {
                 "object-fit": "contain !important"
               }
             });
+
+            rend.themes.select(readerTheme);
 
             // Apple Pencil Hover / Touch Hold & WebKit Document Selection Handler
             rend.on('rendered', (section, view) => {
@@ -432,21 +494,24 @@ export default function ReaderPage() {
     };
   }, [id, router]);
 
-  // Update theme & font settings dynamically
+  // Dynamically update iframe styles when font, size, theme, or line-height change
   useEffect(() => {
     if (renditionRef.current) {
       renditionRef.current.themes.select(readerTheme);
+      const fontObj = fontCatalog[readerFont] || fontCatalog.garamond;
       renditionRef.current.themes.default({
         "html, body": {
           "margin": "0 !important",
           "padding": "0 !important"
         },
         "p, div, span, blockquote": {
-          "font-family": `${fontFamilies[readerFont]} !important`
+          "font-family": `${fontObj.family} !important`,
+          "font-size": `${calculatedEpubScale} !important`,
+          "line-height": `${lineHeight} !important`
         }
       });
     }
-  }, [readerTheme, readerFont]);
+  }, [readerTheme, readerFont, fontSizePercent, lineHeight]);
 
   // Window Resize Listener
   useEffect(() => {
@@ -533,9 +598,9 @@ export default function ReaderPage() {
 
   const dynamicFabStyle = {
     ...fabStyle,
-    color: readerTheme === 'dark' ? '#F5F2EB' : '#1C2321',
-    background: readerTheme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(245, 242, 235, 0.85)',
-    border: readerTheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(28, 35, 33, 0.12)'
+    color: readerTheme === 'dark' || readerTheme === 'oled' ? '#F5F2EB' : '#1C2321',
+    background: readerTheme === 'dark' || readerTheme === 'oled' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(245, 242, 235, 0.85)',
+    border: readerTheme === 'dark' || readerTheme === 'oled' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(28, 35, 33, 0.12)'
   };
 
   if (!activeBook) {
@@ -546,7 +611,7 @@ export default function ReaderPage() {
     );
   }
 
-  const currentColors = themeColors[readerTheme];
+  const currentColors = themeColors[readerTheme] || themeColors.canvas;
 
   return (
     <div style={{ height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden', background: currentColors.background, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -565,7 +630,7 @@ export default function ReaderPage() {
         pointerEvents: 'none'
       }}>
         <div style={{
-          background: readerTheme === 'dark' ? 'rgba(28, 35, 33, 0.85)' : 'rgba(245, 242, 235, 0.9)',
+          background: readerTheme === 'dark' || readerTheme === 'oled' ? 'rgba(28, 35, 33, 0.85)' : 'rgba(245, 242, 235, 0.9)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           padding: '5px 14px',
@@ -578,7 +643,7 @@ export default function ReaderPage() {
             textTransform: 'uppercase',
             letterSpacing: '0.12em',
             fontWeight: 600,
-            color: readerTheme === 'dark' ? '#F5F2EB' : '#1C2321'
+            color: readerTheme === 'dark' || readerTheme === 'oled' ? '#F5F2EB' : '#1C2321'
           }}>
             {progressPercent}% Read
           </span>
@@ -586,7 +651,7 @@ export default function ReaderPage() {
         <div style={{
           width: '100px',
           height: '3px',
-          background: readerTheme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+          background: readerTheme === 'dark' || readerTheme === 'oled' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
           borderRadius: '2px',
           overflow: 'hidden'
         }}>
@@ -613,7 +678,7 @@ export default function ReaderPage() {
       <button 
         onClick={() => setIsSettingsOpen(true)}
         style={{ ...dynamicFabStyle, top: '20px', right: '20px' }}
-        title="Settings"
+        title="Reader Settings"
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
@@ -716,115 +781,251 @@ export default function ReaderPage() {
         />
       ) : null}
 
-      {/* Settings Modal */}
+      {/* Modern Impeccable Reader Settings Drawer Modal */}
       {isSettingsOpen ? (
         <div 
           style={{
             position: 'absolute',
             inset: 0,
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            background: 'rgba(28, 35, 33, 0.45)',
+            backdropFilter: 'blur(28px)',
+            WebkitBackdropFilter: 'blur(28px)',
+            background: 'rgba(15, 20, 18, 0.55)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            padding: '16px'
           }}
           onClick={() => setIsSettingsOpen(false)}
         >
           <div 
-            className="glass-panel" 
             style={{ 
-              padding: '2rem', 
-              borderRadius: '1.25rem', 
-              background: 'rgba(255, 255, 255, 0.9)', 
-              minWidth: '320px',
-              border: '1px solid rgba(255,255,255,0.5)',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
+              width: 'min(92vw, 460px)',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              borderRadius: '24px', 
+              background: 'rgba(255, 255, 255, 0.94)', 
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.8)',
+              boxShadow: '0 30px 70px -15px rgba(0,0,0,0.3)',
+              padding: '24px',
+              boxSizing: 'border-box'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 className="text-soul text-2xl text-contrast-midnight m-0">Reader Settings</h3>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(28,35,33,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1C2321' }}>
+                  <Sliders size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1C2321', fontFamily: fontCatalog[readerFont]?.family }}>
+                    Typography & Canvas
+                  </h3>
+                  <span style={{ fontSize: '12px', color: 'rgba(28,35,33,0.5)', fontWeight: 500 }}>
+                    Craft your reading environment
+                  </span>
+                </div>
+              </div>
               <button 
                 onClick={() => setIsSettingsOpen(false)} 
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(28,35,33,0.5)' }}
+                style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1C2321' }}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
             
-            <div className="text-core text-contrast-midnight/80 mb-6 space-y-6">
-              <div>
-                <label className="text-xs uppercase tracking-widest text-contrast-midnight/50 block mb-3 font-semibold">Typography</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button 
-                    onClick={() => setReaderFont('serif')}
-                    className="clickable"
-                    style={{ 
-                      flex: 1, padding: '10px', borderRadius: '8px',
-                      background: readerFont === 'serif' ? 'var(--color-contrast-midnight)' : 'transparent',
-                      color: readerFont === 'serif' ? 'white' : 'var(--color-contrast-midnight)',
-                      border: readerFont === 'serif' ? '1px solid var(--color-contrast-midnight)' : '1px solid rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    Serif
-                  </button>
-                  <button 
-                    onClick={() => setReaderFont('sans')}
-                    className="clickable"
-                    style={{ 
-                      flex: 1, padding: '10px', borderRadius: '8px',
-                      background: readerFont === 'sans' ? 'var(--color-contrast-midnight)' : 'transparent',
-                      color: readerFont === 'sans' ? 'white' : 'var(--color-contrast-midnight)',
-                      border: readerFont === 'sans' ? '1px solid var(--color-contrast-midnight)' : '1px solid rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    Sans
-                  </button>
+            {/* Section 1: Font Size Slider (0% - 100%) */}
+            <div style={{ marginBottom: '24px', background: 'rgba(28,35,33,0.03)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Type size={16} style={{ color: 'rgba(28,35,33,0.6)' }} />
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#1C2321', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Font Size
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, background: '#1C2321', color: 'white', padding: '2px 8px', borderRadius: '12px' }}>
+                    {fontSizePercent}%
+                  </span>
+                  <span style={{ fontSize: '12px', color: 'rgba(28,35,33,0.5)', fontWeight: 500 }}>
+                    ({calculatedPxSize}px)
+                  </span>
                 </div>
               </div>
-              
-              <div>
-                <label className="text-xs uppercase tracking-widest text-contrast-midnight/50 block mb-3 font-semibold">Canvas Tone</label>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div 
-                    onClick={() => setReaderTheme('canvas')}
-                    style={{ 
-                      width: '36px', height: '36px', borderRadius: '50%', background: '#F5F2EB', cursor: 'pointer',
-                      border: readerTheme === 'canvas' ? '3px solid var(--color-contrast-sepia)' : '2px solid rgba(0,0,0,0.1)',
-                      boxShadow: readerTheme === 'canvas' ? '0 0 0 2px white inset' : 'none'
-                    }} 
-                  />
-                  <div 
-                    onClick={() => setReaderTheme('dark')}
-                    style={{ 
-                      width: '36px', height: '36px', borderRadius: '50%', background: '#1C2321', cursor: 'pointer',
-                      border: readerTheme === 'dark' ? '3px solid var(--color-contrast-sepia)' : '2px solid rgba(0,0,0,0.2)',
-                      boxShadow: readerTheme === 'dark' ? '0 0 0 2px white inset' : 'none'
-                    }} 
-                  />
-                  <div 
-                    onClick={() => setReaderTheme('white')}
-                    style={{ 
-                      width: '36px', height: '36px', borderRadius: '50%', background: '#FFFFFF', cursor: 'pointer',
-                      border: readerTheme === 'white' ? '3px solid var(--color-contrast-sepia)' : '2px solid rgba(0,0,0,0.1)',
-                      boxShadow: readerTheme === 'white' ? '0 0 0 2px white inset' : 'none'
-                    }} 
-                  />
-                </div>
+
+              {/* Slider Track */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button 
+                  onClick={() => updateSetting('size', Math.max(0, fontSizePercent - 5), setFontSizePercent)}
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'white', border: '1px solid rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#1C2321' }}
+                >
+                  <Minus size={14} />
+                </button>
+                <input 
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={fontSizePercent}
+                  onChange={(e) => updateSetting('size', Number(e.target.value), setFontSizePercent)}
+                  style={{ flex: 1, height: '6px', borderRadius: '3px', accentColor: '#1C2321', cursor: 'pointer' }}
+                />
+                <button 
+                  onClick={() => updateSetting('size', Math.min(100, fontSizePercent + 5), setFontSizePercent)}
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'white', border: '1px solid rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#1C2321' }}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Section 2: Typeface Selector Grid */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(28,35,33,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '12px' }}>
+                Typeface Collection
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                {Object.entries(fontCatalog).map(([key, item]) => {
+                  const isSelected = readerFont === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => updateSetting('font', key, setReaderFont)}
+                      style={{
+                        padding: '12px 14px',
+                        borderRadius: '14px',
+                        border: isSelected ? '2px solid #1C2321' : '1px solid rgba(0,0,0,0.08)',
+                        background: isSelected ? '#1C2321' : 'rgba(255,255,255,0.7)',
+                        color: isSelected ? '#FFFFFF' : '#1C2321',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                        boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
+                      }}
+                    >
+                      <div style={{ fontSize: '14px', fontWeight: 600, fontFamily: item.family, marginBottom: '2px' }}>
+                        {item.name}
+                      </div>
+                      <div style={{ fontSize: '10px', opacity: isSelected ? 0.7 : 0.4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {item.category}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section 3: Line Height Spacing */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                <AlignLeft size={16} style={{ color: 'rgba(28,35,33,0.6)' }} />
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(28,35,33,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Line Spacing
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {[
+                  { label: 'Compact', value: 1.4 },
+                  { label: 'Balanced', value: 1.75 },
+                  { label: 'Relaxed', value: 2.1 }
+                ].map((item) => {
+                  const isSelected = lineHeight === item.value;
+                  return (
+                    <button
+                      key={item.label}
+                      onClick={() => updateSetting('lineheight', item.value, setLineHeight)}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '10px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        border: isSelected ? '2px solid #1C2321' : '1px solid rgba(0,0,0,0.08)',
+                        background: isSelected ? '#1C2321' : 'white',
+                        color: isSelected ? 'white' : '#1C2321',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section 4: Canvas Theme Tones */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                <Feather size={16} style={{ color: 'rgba(28,35,33,0.6)' }} />
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(28,35,33,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Canvas Atmosphere
+                </label>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+                {Object.entries(themeColors).map(([key, tone]) => {
+                  const isSelected = readerTheme === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => updateSetting('theme', key, setReaderTheme)}
+                      title={tone.name}
+                      style={{
+                        height: '42px',
+                        borderRadius: '12px',
+                        background: tone.background,
+                        border: isSelected ? '3px solid #d4af37' : '1px solid rgba(0,0,0,0.15)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: isSelected ? '0 4px 12px rgba(212,175,55,0.3)' : 'none',
+                        transition: 'transform 0.15s ease',
+                        transform: isSelected ? 'scale(1.08)' : 'scale(1)'
+                      }}
+                    >
+                      {isSelected ? <Check size={16} style={{ color: tone.color }} /> : null}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             
-            <button 
-              onClick={() => setIsSettingsOpen(false)} 
-              className="btn-premium w-full flex justify-center py-3 font-semibold"
-              style={{ transition: 'transform 0.2s', marginTop: '16px' }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              Done
-            </button>
+            {/* Footer Buttons */}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+              <button 
+                onClick={() => {
+                  updateSetting('theme', 'canvas', setReaderTheme);
+                  updateSetting('font', 'garamond', setReaderFont);
+                  updateSetting('size', 50, setFontSizePercent);
+                  updateSetting('lineheight', 1.75, setLineHeight);
+                }} 
+                style={{ 
+                  padding: '12px', 
+                  borderRadius: '14px', 
+                  border: '1px solid rgba(0,0,0,0.1)', 
+                  background: 'white', 
+                  cursor: 'pointer', 
+                  color: 'rgba(28,35,33,0.7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600
+                }}
+              >
+                <RotateCcw size={14} /> Reset
+              </button>
+              <button 
+                onClick={() => setIsSettingsOpen(false)} 
+                className="btn-premium flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2"
+                style={{ borderRadius: '14px' }}
+              >
+                Done Reading
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
