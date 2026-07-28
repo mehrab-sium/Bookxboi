@@ -19,7 +19,8 @@ import {
   Check, 
   BookOpen,
   AlignLeft,
-  Sparkles
+  Sparkles,
+  MousePointer
 } from 'lucide-react';
 import { getBookData, updateReadingProgress } from '../../../lib/libraryStore';
 import GlassTooltip from '../../../components/GlassTooltip';
@@ -72,6 +73,7 @@ export default function ReaderPage() {
   const [readerFont, setReaderFont] = useState('garamond');
   const [fontSizePx, setFontSizePx] = useState(18); // Direct 0px to 100px font size scale
   const [lineHeight, setLineHeight] = useState(1.75);
+  const [showNavButtons, setShowNavButtons] = useState(true); // Toggle for side navigation buttons
 
   // Load saved preferences on mount
   useEffect(() => {
@@ -80,11 +82,13 @@ export default function ReaderPage() {
       const savedFont = localStorage.getItem('bookxboi_font');
       const savedSize = localStorage.getItem('bookxboi_sizepx');
       const savedLineHeight = localStorage.getItem('bookxboi_lineheight');
+      const savedShowNav = localStorage.getItem('bookxboi_shownavbuttons');
 
       if (savedTheme && themeColors[savedTheme]) setReaderTheme(savedTheme);
       if (savedFont && fontCatalog[savedFont]) setReaderFont(savedFont);
       if (savedSize) setFontSizePx(Math.max(0, Math.min(100, Number(savedSize))));
       if (savedLineHeight) setLineHeight(Number(savedLineHeight));
+      if (savedShowNav !== null) setShowNavButtons(savedShowNav === 'true');
     } catch (e) {}
   }, []);
 
@@ -92,7 +96,7 @@ export default function ReaderPage() {
   const updateSetting = (key, value, setter) => {
     setter(value);
     try {
-      localStorage.setItem(`bookxboi_${key}`, value);
+      localStorage.setItem(`bookxboi_${key}`, String(value));
     } catch (e) {}
   };
 
@@ -597,26 +601,30 @@ export default function ReaderPage() {
         <Settings size={18} />
       </button>
 
-      {/* Compact Side Page-Turn Buttons (Positioned to Avoid Mobile Content Overlap) */}
-      <button 
-        onClick={handlePagePrev}
-        style={{ ...sideNavStyle, left: '8px' }}
-        title="Previous Page"
-        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.75'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
-      >
-        <ChevronLeft size={20} />
-      </button>
+      {/* Conditional Floating Side Page-Turn Buttons */}
+      {showNavButtons ? (
+        <>
+          <button 
+            onClick={handlePagePrev}
+            style={{ ...sideNavStyle, left: '8px' }}
+            title="Previous Page"
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.75'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
+          >
+            <ChevronLeft size={20} />
+          </button>
 
-      <button 
-        onClick={handlePageNext}
-        style={{ ...sideNavStyle, right: '8px' }}
-        title="Next Page"
-        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.75'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
-      >
-        <ChevronRight size={20} />
-      </button>
+          <button 
+            onClick={handlePageNext}
+            style={{ ...sideNavStyle, right: '8px' }}
+            title="Next Page"
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.75'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </>
+      ) : null}
 
       {/* Responsive Book Frame Canvas with outer padding */}
       <div 
@@ -635,15 +643,15 @@ export default function ReaderPage() {
           transition: 'background 0.3s ease, border 0.3s ease'
         }}
       >
-        {/* Left & Right Tap Zones for Effortless Mobile Page Turning */}
+        {/* Left & Right Touch/Tap Zones for Effortless Page Turning */}
         <div 
           onClick={handlePagePrev}
-          style={{ position: 'absolute', top: 0, left: 0, width: '12%', height: '100%', zIndex: 15, cursor: 'pointer' }}
+          style={{ position: 'absolute', top: 0, left: 0, width: '14%', height: '100%', zIndex: 15, cursor: 'pointer' }}
           title="Previous Page"
         />
         <div 
           onClick={handlePageNext}
-          style={{ position: 'absolute', top: 0, right: 0, width: '12%', height: '100%', zIndex: 15, cursor: 'pointer' }}
+          style={{ position: 'absolute', top: 0, right: 0, width: '14%', height: '100%', zIndex: 15, cursor: 'pointer' }}
           title="Next Page"
         />
 
@@ -749,10 +757,10 @@ export default function ReaderPage() {
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1C2321', fontFamily: fontCatalog[readerFont]?.family }}>
-                    Typography & Atmosphere
+                    Typography & Controls
                   </h3>
                   <span style={{ fontSize: '12px', color: 'rgba(28,35,33,0.5)', fontWeight: 500 }}>
-                    Craft your personal reading experience
+                    Customize reading layout and interface
                   </span>
                 </div>
               </div>
@@ -765,7 +773,7 @@ export default function ReaderPage() {
             </div>
             
             {/* Section 1: Font Size Slider (0px to 100px) */}
-            <div style={{ marginBottom: '24px', background: 'rgba(28,35,33,0.03)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)' }}>
+            <div style={{ marginBottom: '20px', background: 'rgba(28,35,33,0.03)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Type size={16} style={{ color: 'rgba(28,35,33,0.6)' }} />
@@ -805,12 +813,50 @@ export default function ReaderPage() {
               </div>
             </div>
 
-            {/* Section 2: Typeface Selector Grid (Expanded Google Fonts) */}
-            <div style={{ marginBottom: '24px' }}>
+            {/* Section 2: Toggle Floating Navigation Buttons */}
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(28,35,33,0.03)', padding: '14px 16px', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#1C2321' }}>
+                  Floating Side Navigation Buttons
+                </div>
+                <div style={{ fontSize: '11px', color: 'rgba(28,35,33,0.5)', marginTop: '2px' }}>
+                  Toggle side &lt; &gt; buttons (canvas edge taps work regardless)
+                </div>
+              </div>
+              <button
+                onClick={() => updateSetting('shownavbuttons', !showNavButtons, setShowNavButtons)}
+                style={{
+                  width: '46px',
+                  height: '26px',
+                  borderRadius: '13px',
+                  background: showNavButtons ? '#1C2321' : 'rgba(0,0,0,0.15)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background 0.2s ease',
+                  padding: '3px'
+                }}
+              >
+                <div 
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    background: 'white',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                    transition: 'transform 0.2s ease',
+                    transform: showNavButtons ? 'translateX(20px)' : 'translateX(0)'
+                  }}
+                />
+              </button>
+            </div>
+
+            {/* Section 3: Typeface Selector Grid (Expanded Google Fonts) */}
+            <div style={{ marginBottom: '20px' }}>
               <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(28,35,33,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '12px' }}>
-                Expanded Typeface Collection
+                Typeface Collection
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', maxHeight: '220px', overflowY: 'auto', paddingRight: '4px' }}>
                 {Object.entries(fontCatalog).map(([key, item]) => {
                   const isSelected = readerFont === key;
                   return (
@@ -841,8 +887,8 @@ export default function ReaderPage() {
               </div>
             </div>
 
-            {/* Section 3: Line Spacing */}
-            <div style={{ marginBottom: '24px' }}>
+            {/* Section 4: Line Spacing */}
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                 <AlignLeft size={16} style={{ color: 'rgba(28,35,33,0.6)' }} />
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(28,35,33,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -880,7 +926,7 @@ export default function ReaderPage() {
               </div>
             </div>
 
-            {/* Section 4: Canvas Theme Tones & OLED Pitch Dark */}
+            {/* Section 5: Canvas Theme Tones & OLED Pitch Dark */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
                 <Feather size={16} style={{ color: 'rgba(28,35,33,0.6)' }} />
@@ -925,6 +971,7 @@ export default function ReaderPage() {
                   updateSetting('font', 'garamond', setReaderFont);
                   updateSetting('sizepx', 18, setFontSizePx);
                   updateSetting('lineheight', 1.75, setLineHeight);
+                  updateSetting('shownavbuttons', true, setShowNavButtons);
                 }} 
                 style={{ 
                   padding: '12px', 
