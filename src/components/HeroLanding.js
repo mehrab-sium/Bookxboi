@@ -115,6 +115,14 @@ export default function HeroLanding({ setView }) {
         />
       </div>
 
+      {/* 2. Floating Glass Frosted Canvas Layer */}
+      <div 
+        className="fixed inset-0 w-full h-full -z-40 pointer-events-none backdrop-blur-[7px] bg-[#0a0c0b]/25 transition-all duration-700 ease-out"
+        style={{
+          background: "radial-gradient(ellipse at 50% 30%, rgba(245, 242, 235, 0.03) 0%, rgba(10, 12, 11, 0.3) 100%)"
+        }}
+      />
+
       <div className="sticky top-0 w-full h-screen flex flex-col lg:flex-row items-center justify-between px-6 lg:px-12 py-24 gap-12 overflow-hidden pointer-events-none">
         
         {/* Massive Typography - Left Aligned with negative space */}

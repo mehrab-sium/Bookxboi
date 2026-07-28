@@ -50,18 +50,18 @@ export default function Home() {
       <GlobalHeader setView={handleSetView} />
       
       {/* Global Particle System */}
-      {(view === 'landing' || view === 'transitioning') && <ParticleSystem />}
+      {(view === 'landing' || view === 'transitioning') ? <ParticleSystem /> : null}
       
-      {(view === 'landing' || view === 'transitioning') && (
+      {(view === 'landing' || view === 'transitioning') ? (
         <div className="hero-transition-wrapper">
           <HeroLanding setView={handleSetView} />
           <Footer />
         </div>
-      )}
+      ) : null}
 
-      {view === 'app' && (
+      {view === 'app' ? (
         <ReaderApp />
-      )}
+      ) : null}
     </main>
   );
 }
