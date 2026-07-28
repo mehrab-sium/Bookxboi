@@ -42,7 +42,7 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             {/* Facebook Button */}
             <a
-              href="https://facebook.com"
+              href="http://fb.me/sium.mehrab"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 sm:flex-initial flex items-center justify-center gap-3 px-6 py-3.5 rounded-full backdrop-blur-md bg-white/5 border border-white/15 text-xs uppercase tracking-widest text-[#F5F2EB] hover:bg-[#d4af37] hover:text-[#0a0c0b] hover:border-[#d4af37] transition-all duration-300 shadow-lg group"
@@ -55,7 +55,7 @@ export default function Footer() {
 
             {/* Instagram Button */}
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/mehrab_sium"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 sm:flex-initial flex items-center justify-center gap-3 px-6 py-3.5 rounded-full backdrop-blur-md bg-white/5 border border-white/15 text-xs uppercase tracking-widest text-[#F5F2EB] hover:bg-[#d4af37] hover:text-[#0a0c0b] hover:border-[#d4af37] transition-all duration-300 shadow-lg group"
@@ -71,7 +71,7 @@ export default function Footer() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 backdrop-blur-md bg-white/5 p-2 rounded-2xl border border-white/10">
             <a
               href="mailto:mehrabsium@gmail.com"
-              className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-[#d4af37] text-[#0a0c0b] font-medium text-xs tracking-wider uppercase hover:bg-white transition-all duration-300 shadow-md"
+              className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-[#d4af37] text-[#0a0c0b] font-medium text-xs tracking-wider lowercase hover:bg-white transition-all duration-300 shadow-md"
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
