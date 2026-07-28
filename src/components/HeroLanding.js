@@ -74,7 +74,7 @@ export default function HeroLanding({ setView }) {
       ref={containerRef} 
       className="relative w-full h-[150vh] overflow-hidden"
     >
-      {/* 1. Global Canvas & Background Fix - Fully Responsive for Mobile & Desktop */}
+      {/* 1. Global Canvas & Background Fix - Whole Photo View on 19:6 & Widescreen, Percentage Scaling across Devices */}
       <div className="fixed inset-0 w-full h-full -z-50 overflow-hidden select-none pointer-events-none">
         <Image 
           src="/fast-load-book-x-boi.jpg"
@@ -82,21 +82,21 @@ export default function HeroLanding({ setView }) {
           fill
           priority
           sizes="100vw"
-          quality={90}
-          className="object-cover object-[75%_center] sm:object-[80%_center] md:object-[85%_center] lg:object-right-center transition-all duration-700 ease-out"
+          quality={95}
+          className="object-cover object-[65%_50%] sm:object-[70%_50%] md:object-[75%_50%] lg:object-center w-full h-full transition-all duration-700 ease-out"
         />
-        {/* Desktop Gradient Overlay: Smooth fade from dark left panel to vivid right artwork */}
+        {/* Lightweight Cinematic Vignette Scrim - Ensures full photo remains completely visible */}
         <div 
-          className="absolute inset-0 hidden md:block pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(to right, rgba(17, 20, 19, 0.98) 0%, rgba(17, 20, 19, 0.88) 38%, rgba(17, 20, 19, 0.4) 70%, rgba(17, 20, 19, 0.05) 100%)"
+            background: "radial-gradient(ellipse at center, rgba(17, 20, 19, 0.25) 0%, rgba(17, 20, 19, 0.45) 75%, rgba(17, 20, 19, 0.75) 100%)"
           }}
         />
-        {/* Mobile & Smartphone Gradient Overlay: Rich vertical contrast for portrait viewports */}
+        {/* Soft edge gradient for header & footer readability */}
         <div 
-          className="absolute inset-0 block md:hidden pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(to bottom, rgba(17, 20, 19, 0.95) 0%, rgba(17, 20, 19, 0.75) 50%, rgba(17, 20, 19, 0.92) 100%)"
+            background: "linear-gradient(to bottom, rgba(11, 14, 13, 0.6) 0%, transparent 25%, transparent 75%, rgba(11, 14, 13, 0.7) 100%)"
           }}
         />
       </div>
@@ -107,9 +107,9 @@ export default function HeroLanding({ setView }) {
         <div className="flex-1 flex flex-col justify-center items-start text-left relative z-10 w-full h-full pt-16 pl-6 lg:pl-32 xl:pl-40 text-container pointer-events-auto">
           
           <div className="relative mb-0" style={{ zIndex: 20 }}>
-            {/* 2. Typography Contrast & Shadow Removal */}
+            {/* 2. Typography Contrast with Crisp Drop Shadows */}
             <h1 
-              className="modern-text text-soul text-[12vw] sm:text-[10vw] lg:text-[8vw] xl:text-[9vw] whitespace-nowrap relative pt-4 pr-4" 
+              className="modern-text text-soul text-[12vw] sm:text-[10vw] lg:text-[8vw] xl:text-[9vw] whitespace-nowrap relative pt-4 pr-4 drop-shadow-[0_6px_28px_rgba(0,0,0,0.95)]" 
               style={{ color: '#F5F2EB' }}
             >
               The Modern
@@ -119,15 +119,15 @@ export default function HeroLanding({ setView }) {
           {/* Adjusted overlap slightly so it sits nicely under */}
           <div className="relative overflow-hidden z-10" style={{ marginTop: '-0.5vw' }}>
             <h1 
-              className="archive-text text-soul text-[12vw] sm:text-[10vw] lg:text-[8vw] xl:text-[9vw] italic ml-8 lg:ml-24 whitespace-nowrap pt-2" 
+              className="archive-text text-soul text-[12vw] sm:text-[10vw] lg:text-[8vw] xl:text-[9vw] italic ml-8 lg:ml-24 whitespace-nowrap pt-2 drop-shadow-[0_6px_28px_rgba(0,0,0,0.95)]" 
               style={{ color: '#F5F2EB' }}
             >
               Archive
             </h1>
           </div>
 
-          <div className="reveal-text mt-12 lg:mt-24 max-w-sm pl-4 lg:pl-6 ml-2 lg:ml-4 border-l border-[#F5F2EB]/20 relative z-30">
-            <p className="text-core text-sm leading-relaxed text-[#F5F2EB]/80">
+          <div className="reveal-text mt-8 lg:mt-16 max-w-sm p-6 rounded-2xl backdrop-blur-md bg-[#111413]/40 border border-[#F5F2EB]/15 shadow-2xl relative z-30">
+            <p className="text-core text-sm leading-relaxed text-[#F5F2EB] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
               A bespoke digital reading experience. Hyper-premium, editorial-grade architecture designed for deep focus and aesthetic immersion.
             </p>
             
@@ -135,7 +135,7 @@ export default function HeroLanding({ setView }) {
               onClick={handleEnterLibrary}
               onMouseEnter={handleBtnEnter}
               onMouseLeave={handleBtnLeave}
-              className="mt-8 px-6 py-3 rounded-full border border-[#F5F2EB] text-[#F5F2EB] text-core text-xs uppercase tracking-widest hover:bg-[#F5F2EB] hover:text-[#111413] transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto"
+              className="mt-6 px-6 py-3 rounded-full border border-[#F5F2EB] text-[#F5F2EB] text-core text-xs uppercase tracking-widest hover:bg-[#F5F2EB] hover:text-[#111413] transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto shadow-lg"
             >
               Enter Library
             </button>
