@@ -67,6 +67,36 @@ export default function ReaderPage() {
     setSelectionRect(null);
   };
 
+  // Helper to extract 1-2 lines (~240 characters) of rich surrounding context for AI
+  const extractRichContext = (range, word) => {
+    if (!range) return word;
+    try {
+      let parent = range.commonAncestorContainer;
+      if (parent && parent.nodeType !== 1) {
+        parent = parent.parentNode;
+      }
+
+      while (parent && parent.ownerDocument && parent !== parent.ownerDocument.body && !['P', 'DIV', 'BLOCKQUOTE', 'SECTION', 'ARTICLE', 'BODY'].includes(parent.nodeName)) {
+        parent = parent.parentNode;
+      }
+
+      let fullText = parent ? (parent.textContent || parent.innerText || '').trim() : word;
+
+      if (fullText.length > 280) {
+        const idx = fullText.indexOf(word);
+        if (idx !== -1) {
+          const start = Math.max(0, idx - 110);
+          const end = Math.min(fullText.length, idx + word.length + 110);
+          fullText = (start > 0 ? '...' : '') + fullText.substring(start, end).trim() + (end < fullText.length ? '...' : '');
+        }
+      }
+
+      return fullText || word;
+    } catch (e) {
+      return word;
+    }
+  };
+
   // Initialize EPUB & PDF Readers
   useEffect(() => {
     if (!id) return;
@@ -105,7 +135,6 @@ export default function ReaderPage() {
             book.locations.generate(1000).catch(() => {});
 
             // Initialize Rendition with manager: 'continuous' and flow: 'paginated'
-            // This prevents iframe DOM column collapse and blank page glitches
             const rend = book.renderTo(viewerRef.current, {
               width: '100%',
               height: '100%',
@@ -116,7 +145,7 @@ export default function ReaderPage() {
 
             renditionRef.current = rend;
 
-            // Apply Themes with clean margin resets inside iframe
+            // Apply Themes
             rend.themes.register('canvas', { "body": { "background": "#FAF8F5 !important", "color": "#1C2321 !important" } });
             rend.themes.register('dark', { "body": { "background": "#1C2321 !important", "color": "#F5F2EB !important" } });
             rend.themes.register('white', { "body": { "background": "#FFFFFF !important", "color": "#1C2321 !important" } });
@@ -140,7 +169,55 @@ export default function ReaderPage() {
               }
             });
 
-            // Handle Text Selection & Tap for AI Dictionary
+            // iOS WebKit & Universal Document Selection Handler
+            rend.on('rendered', (section, view) => {
+              const doc = view.document;
+              if (!doc) return;
+
+              const handleSelection = () => {
+                if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
+
+                selectionTimeoutRef.current = setTimeout(() => {
+                  try {
+                    const sel = doc.getSelection();
+                    if (!sel || sel.isCollapsed) return;
+
+                    const word = sel.toString().trim();
+                    if (!word || word.length < 2) return;
+
+                    const range = sel.getRangeAt(0);
+                    if (!range) return;
+
+                    const rect = range.getBoundingClientRect();
+                    const iframeElement = view.iframe || doc.defaultView.frameElement;
+                    const iframeRect = iframeElement ? iframeElement.getBoundingClientRect() : { left: 0, top: 0 };
+
+                    const contextText = extractRichContext(range, word);
+
+                    const absoluteX = rect.left + iframeRect.left;
+                    const absoluteY = rect.top + iframeRect.top;
+
+                    const rectWidth = rect.width || 80;
+                    const rectHeight = rect.height || 24;
+
+                    triggerAiDictionary(word, contextText, absoluteX, absoluteY, rectWidth, rectHeight);
+                  } catch (err) {
+                    console.error('iOS WebKit selection handler error:', err);
+                  }
+                }, 350);
+              };
+
+              doc.addEventListener('touchend', handleSelection, { passive: true });
+              doc.addEventListener('mouseup', handleSelection, { passive: true });
+              doc.addEventListener('selectionchange', () => {
+                const sel = doc.getSelection();
+                if (sel && !sel.isCollapsed && sel.toString().trim().length >= 2) {
+                  handleSelection();
+                }
+              }, { passive: true });
+            });
+
+            // Standard EPUB.js selection event fallback
             rend.on('selected', (cfiRange, contents) => {
               if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
 
@@ -150,10 +227,7 @@ export default function ReaderPage() {
                   const word = range.toString().trim();
                   if (!word || word.length < 2) return;
 
-                  let contextText = word;
-                  if (range.startContainer && range.startContainer.parentNode) {
-                    contextText = range.startContainer.parentNode.textContent || word;
-                  }
+                  const contextText = extractRichContext(range, word);
 
                   const rect = range.getBoundingClientRect();
                   const iframeRect = contents.document.defaultView.frameElement.getBoundingClientRect();
@@ -163,13 +237,13 @@ export default function ReaderPage() {
                     contextText,
                     rect.left + iframeRect.left,
                     rect.top + iframeRect.top,
-                    rect.width,
-                    rect.height
+                    rect.width || 80,
+                    rect.height || 24
                   );
                 } catch (err) {
                   console.error('Error getting selection:', err);
                 }
-              }, 400);
+              }, 350);
             });
 
             rend.on('click', () => {
@@ -441,7 +515,7 @@ export default function ReaderPage() {
           border: `1px solid ${currentColors.border}`,
           boxShadow: '0 25px 60px -15px rgba(0,0,0,0.18)',
           overflow: 'hidden',
-          padding: '24px 32px', // Safe container padding for iframe
+          padding: '24px 32px',
           boxSizing: 'border-box',
           transition: 'background 0.3s ease, border 0.3s ease'
         }}
