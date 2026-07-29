@@ -25,7 +25,7 @@ export default function Home() {
   };
 
   return (
-    <main ref={containerRef} className="min-h-screen bg-[#0A0D0C] text-[#F5F2EB] relative overflow-x-hidden">
+    <main ref={containerRef} className="min-h-screen text-[#F5F2EB] relative overflow-x-hidden">
       
       {/* 1. Continuous GSAP Book Covers Carousel Background (Replaces Static Background Photos) */}
       <BookCoversCarousel />

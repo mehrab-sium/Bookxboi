@@ -48,15 +48,92 @@
   /* Dual-Font Typography Setup */
   .text-soul {
     @apply font-display font-medium;
-    /* Compress leading for massive headers */
-    line-height: 0.85;
-    /* Let characters breathing room */
-    letter-spacing: -0.02em; 
+    line-height: 0.88;
+    letter-spacing: -0.03em; 
   }
   
   .text-core {
     @apply font-sans;
-    /* Microscopic metadata / paragraph text needs expanded tracking */
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
+  }
+
+  /* Neo-Minimal & Soft Brutalism Design Utilities */
+  .brutal-card {
+    background-color: #F7F4EF;
+    color: #111111;
+    border: 2px solid #111111;
+    box-shadow: 4px 4px 0px #111111;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .brutal-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #111111;
+  }
+
+  .brutal-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    background-color: #111111;
+    color: #F7F4EF;
+    border: 1.5px solid #111111;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+  }
+
+  .brutal-badge-gold {
+    background-color: #E87034;
+    color: #111111;
+    border: 2px solid #111111;
+    box-shadow: 3px 3px 0px #111111;
+  }
+
+  .brutal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.75rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    background-color: #F7F4EF;
+    color: #111111;
+    border: 2.5px solid #111111;
+    box-shadow: 4px 4px 0px #111111;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .brutal-btn:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0px #111111;
+    background-color: #FFFFFF;
+  }
+
+  .brutal-btn-primary {
+    background-color: #E87034;
+    color: #111111;
+  }
+
+  .editorial-rule {
+    height: 2px;
+    background-color: #111111;
+    width: 100%;
+  }
+
+  .editorial-masthead {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
   }
 }
+

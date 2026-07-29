@@ -1,42 +1,65 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import gsap from 'gsap';
 import { PUBLIC_BOOKS, getAllBooks } from '../lib/libraryStore';
 
+// All 29 exact book cover image assets residing in /public/covers
+const ALL_PROJECT_COVERS = [
+  '/covers/Ali_Madonna_in_a_Fur_Coat.jpg',
+  '/covers/Bronte_Jane_Eyre.jpg',
+  '/covers/Bronte_Wuthering_Heights.jpg',
+  '/covers/Camus_The_Myth_of_Sisyphus_and_Other_Essays.jpg',
+  '/covers/Camus_The_Plague.jpeg',
+  '/covers/Dazai_No_Longer_Human.jpg',
+  '/covers/Dickens_A_Tale_of_Two_Cities.jpg',
+  '/covers/Dostoevsky_The_Idiot.jpg',
+  '/covers/Dostoyevsky_Crime_and_Punishment.jpg',
+  '/covers/Dostoyevsky_Notes_From_Underground.jpeg',
+  '/covers/Dostoyevsky_Notes_from_the_Underground.jpg',
+  '/covers/Dostoyevsky_The_Brothers_Karamazov.jpg',
+  '/covers/Dostoyevsky_White_Nights.jpg',
+  '/covers/Goethe_Sorrows_of_Young_Werther.jpeg',
+  '/covers/Huxley_Brave_New_World.jpeg',
+  '/covers/Kafka_Metamorphosis.jpg',
+  '/covers/Kafka_The_Trial.png',
+  '/covers/Kierkegaard_Fear_and_Trembling.jpg',
+  '/covers/Machiavelli_The_Prince.jpeg',
+  '/covers/Marcus_Aurelius_Meditations.jpeg',
+  '/covers/Nietzsche_Beyond_Good_and_Evil.jpg',
+  '/covers/Nietzsche_Thus_Spoke_Zarathustra.jpg',
+  '/covers/Orwell_1984.jpg',
+  '/covers/Plath_The_Bell_Jar.jpeg',
+  '/covers/Steinbeck_East_of_Eden.jpg',
+  '/covers/Steinbeck_The_Pearl.jpg',
+  '/covers/Tolstoy_Anna_Karenina.jpg',
+  '/covers/Wilde_The_Picture_of_Dorian_Gray.jpg',
+  '/covers/Woolf_Mrs_Dalloway.jpg'
+];
+
 export default function BookCoversCarousel() {
-  const [covers, setCovers] = useState([]);
+  const [covers, setCovers] = useState(ALL_PROJECT_COVERS);
   const row1Ref = useRef(null);
   const row2Ref = useRef(null);
   const row3Ref = useRef(null);
 
-  // Load public + custom library book covers
+  // Sync custom uploaded user books dynamically while guaranteeing all static covers
   useEffect(() => {
     let isSubscribed = true;
 
     const loadCovers = async () => {
       try {
-        const allBooks = await getAllBooks();
+        const userBooks = await getAllBooks();
         if (!isSubscribed) return;
 
-        const validCovers = allBooks
+        const customCovers = userBooks
           .map(b => b.coverImage)
           .filter(c => c && typeof c === 'string');
 
-        // Fallback default covers list if library list is small
-        const defaultCovers = PUBLIC_BOOKS
-          .map(b => b.coverImage)
-          .filter(c => c && typeof c === 'string');
-
-        const combined = [...validCovers, ...defaultCovers];
-        // Deduplicate
-        const uniqueCovers = Array.from(new Set(combined));
-
-        setCovers(uniqueCovers.length > 0 ? uniqueCovers : defaultCovers);
+        const combined = Array.from(new Set([...customCovers, ...ALL_PROJECT_COVERS]));
+        setCovers(combined.length > 0 ? combined : ALL_PROJECT_COVERS);
       } catch (err) {
-        const defaultCovers = PUBLIC_BOOKS.map(b => b.coverImage).filter(Boolean);
-        if (isSubscribed) setCovers(defaultCovers);
+        if (isSubscribed) setCovers(ALL_PROJECT_COVERS);
       }
     };
 
@@ -47,45 +70,47 @@ export default function BookCoversCarousel() {
     };
   }, []);
 
-  // GSAP Swift Entrance & Deceleration Loop Animation
+  // Professional GSAP Seamless Marquee Animation with Entrance Acceleration -> Deceleration
   useEffect(() => {
-    if (covers.length === 0) return;
+    if (!row1Ref.current || !row2Ref.current || !row3Ref.current) return;
 
     let ctx = gsap.context(() => {
-      // Row 1: Leftward infinite marquee
+      // Row 1: Leftward continuous smooth marquee loop
       const row1Anim = gsap.to(row1Ref.current, {
         xPercent: -50,
         repeat: -1,
-        duration: 38,
+        duration: 36,
         ease: 'none'
       });
 
-      // Row 2: Rightward infinite marquee
-      const row2Anim = gsap.to(row2Ref.current, {
-        xPercent: 50,
-        repeat: -1,
-        duration: 44,
-        ease: 'none'
-      });
+      // Row 2: Rightward continuous smooth marquee loop
+      const row2Anim = gsap.fromTo(row2Ref.current,
+        { xPercent: -50 },
+        {
+          xPercent: 0,
+          repeat: -1,
+          duration: 42,
+          ease: 'none'
+        }
+      );
 
-      // Row 3: Leftward infinite marquee
+      // Row 3: Leftward continuous smooth marquee loop
       const row3Anim = gsap.to(row3Ref.current, {
         xPercent: -50,
         repeat: -1,
-        duration: 48,
+        duration: 46,
         ease: 'none'
       });
 
-      // Initial Swift Entrance Acceleration -> Smooth Deceleration
-      // Start all animations at 4.2x speed, then decelerate down to 1.0x over 2.8 seconds
-      row1Anim.timeScale(4.2);
-      row2Anim.timeScale(4.2);
-      row3Anim.timeScale(4.2);
+      // Initial Entrance Speed Acceleration -> Smooth Deceleration to 1.0x
+      row1Anim.timeScale(3.2);
+      row2Anim.timeScale(3.2);
+      row3Anim.timeScale(3.2);
 
       gsap.to([row1Anim, row2Anim, row3Anim], {
         timeScale: 1.0,
-        duration: 2.8,
-        ease: 'power3.out',
+        duration: 2.4,
+        ease: 'power2.out',
         delay: 0.1
       });
     });
@@ -93,40 +118,36 @@ export default function BookCoversCarousel() {
     return () => ctx.revert();
   }, [covers]);
 
-  if (covers.length === 0) return null;
-
-  // Quadruple the array for infinite smooth looping seamlessly
+  // Duplicate stream to guarantee 100% infinite seamless wrapping without gaps
   const coverStream = [...covers, ...covers, ...covers, ...covers];
   const row1Covers = coverStream;
   const row2Covers = [...coverStream].reverse();
   const row3Covers = coverStream;
 
   return (
-    <div className="fixed inset-0 w-full h-full -z-50 overflow-hidden bg-[#0A0D0C] select-none pointer-events-none">
+    <div className="fixed inset-0 w-full h-full z-0 overflow-hidden bg-[#0A0D0C] select-none pointer-events-none">
       
-      {/* 1. Angled Infinite Book Covers Marquee Grid */}
+      {/* 1. Angled Infinite GSAP Sliding Book Cover Cards Marquee Grid */}
       <div 
-        className="absolute inset-0 w-[140%] h-[140%] -left-[20%] -top-[20%] flex flex-col justify-center gap-6 opacity-85"
+        className="absolute inset-0 w-[145%] h-[145%] -left-[22%] -top-[22%] flex flex-col justify-center gap-7 opacity-90"
         style={{
-          transform: 'rotate(-4deg) scale(1.08)',
+          transform: 'rotate(-3.5deg) scale(1.05)',
           transformOrigin: 'center center'
         }}
       >
-        {/* Row 1 Stream */}
+        {/* Row 1 Stream — Photo Cards Leftward */}
         <div className="overflow-hidden w-full flex whitespace-nowrap">
           <div ref={row1Ref} className="flex gap-6 min-w-max">
             {row1Covers.map((src, i) => (
               <div 
                 key={`r1-${i}`}
-                className="relative w-[145px] h-[215px] sm:w-[170px] sm:h-[250px] lg:w-[195px] lg:h-[285px] rounded-xl overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.6)] border border-white/10 shrink-0 transform transition-transform duration-300"
+                className="relative w-[140px] h-[210px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
               >
-                <Image 
+                <img 
                   src={src} 
-                  alt="Book Cover" 
-                  fill 
-                  sizes="(max-width: 768px) 170px, 200px"
-                  className="object-cover" 
-                  priority={i < 8}
+                  alt="Book Cover Photo Card" 
+                  loading="eager"
+                  className="w-full h-full object-cover" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/10 pointer-events-none" />
               </div>
@@ -134,20 +155,19 @@ export default function BookCoversCarousel() {
           </div>
         </div>
 
-        {/* Row 2 Stream (Reverse Direction) */}
+        {/* Row 2 Stream — Photo Cards Rightward */}
         <div className="overflow-hidden w-full flex whitespace-nowrap">
-          <div ref={row2Ref} className="flex gap-6 min-w-max -ml-[50%]">
+          <div ref={row2Ref} className="flex gap-6 min-w-max">
             {row2Covers.map((src, i) => (
               <div 
                 key={`r2-${i}`}
-                className="relative w-[145px] h-[215px] sm:w-[170px] sm:h-[250px] lg:w-[195px] lg:h-[285px] rounded-xl overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.6)] border border-white/10 shrink-0"
+                className="relative w-[140px] h-[210px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
               >
-                <Image 
+                <img 
                   src={src} 
-                  alt="Book Cover" 
-                  fill 
-                  sizes="(max-width: 768px) 170px, 200px"
-                  className="object-cover"
+                  alt="Book Cover Photo Card" 
+                  loading="eager"
+                  className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/10 pointer-events-none" />
               </div>
@@ -155,20 +175,19 @@ export default function BookCoversCarousel() {
           </div>
         </div>
 
-        {/* Row 3 Stream */}
+        {/* Row 3 Stream — Photo Cards Leftward */}
         <div className="overflow-hidden w-full flex whitespace-nowrap">
           <div ref={row3Ref} className="flex gap-6 min-w-max">
             {row3Covers.map((src, i) => (
               <div 
                 key={`r3-${i}`}
-                className="relative w-[145px] h-[215px] sm:w-[170px] sm:h-[250px] lg:w-[195px] lg:h-[285px] rounded-xl overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.6)] border border-white/10 shrink-0"
+                className="relative w-[140px] h-[210px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
               >
-                <Image 
+                <img 
                   src={src} 
-                  alt="Book Cover" 
-                  fill 
-                  sizes="(max-width: 768px) 170px, 200px"
-                  className="object-cover"
+                  alt="Book Cover Photo Card" 
+                  loading="eager"
+                  className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/10 pointer-events-none" />
               </div>
@@ -177,39 +196,19 @@ export default function BookCoversCarousel() {
         </div>
       </div>
 
-      {/* 2. Shaped Color Mask & Gradual Horizontal Blur (Left-to-Right Fade) */}
-      {/* On desktop: heavy blur on left (text side), fading to clear carousel on right */}
+      {/* 2. Soft Ambient Scrim Overlay (NO Black Rectangle or Harsh Blur Box!) */}
       <div 
-        className="absolute inset-0 pointer-events-none z-10 hidden md:block"
+        className="absolute inset-0 pointer-events-none z-10"
         style={{
-          background: 'linear-gradient(to right, rgba(10, 13, 12, 0.98) 0%, rgba(10, 13, 12, 0.94) 38%, rgba(10, 13, 12, 0.65) 60%, rgba(10, 13, 12, 0.2) 82%, rgba(10, 13, 12, 0.05) 100%)'
-        }}
-      />
-      <div 
-        className="absolute inset-0 pointer-events-none z-10 hidden md:block"
-        style={{
-          backdropFilter: 'blur(26px)',
-          WebkitBackdropFilter: 'blur(26px)',
-          maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 35%, rgba(0,0,0,0.3) 62%, rgba(0,0,0,0) 88%)',
-          WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 35%, rgba(0,0,0,0.3) 62%, rgba(0,0,0,0) 88%)'
+          background: 'radial-gradient(ellipse at 35% 45%, rgba(10, 13, 12, 0.4) 0%, rgba(10, 13, 12, 0.75) 100%)'
         }}
       />
 
-      {/* Mobile Backdrop & Blur Scrim */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-10 block md:hidden"
-        style={{
-          background: 'linear-gradient(to bottom, rgba(10, 13, 12, 0.95) 0%, rgba(10, 13, 12, 0.85) 55%, rgba(10, 13, 12, 0.4) 100%)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)'
-        }}
-      />
-
-      {/* Vignette Edge Shading */}
+      {/* Subtle Corner Vignette */}
       <div 
         className="absolute inset-0 pointer-events-none z-20"
         style={{
-          boxShadow: 'inset 0 0 120px rgba(10, 13, 12, 0.95)'
+          boxShadow: 'inset 0 0 90px rgba(10, 13, 12, 0.6)'
         }}
       />
     </div>

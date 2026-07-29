@@ -53,7 +53,10 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <PWAInstallPrompt />
-      </body>
+      {/* impeccable-live-start */}
+<script src="http://localhost:8400/live.js?token=156719aa-e436-428a-b8cb-b91925964ffb"></script>
+{/* impeccable-live-end */}
+</body>
     </html>
   );
 }
