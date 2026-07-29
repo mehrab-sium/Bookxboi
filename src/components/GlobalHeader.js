@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Key } from 'lucide-react';
+import { Menu, X, Key, BookOpen, Info, Sliders, BookMarked, Search } from 'lucide-react';
 import gsap from 'gsap';
 
 export default function GlobalHeader({ setView }) {
@@ -15,6 +15,7 @@ export default function GlobalHeader({ setView }) {
   const logoRightRef = useRef(null);
   const aboutOverlayRef = useRef(null);
   const aboutPanelRef = useRef(null);
+  const mobileMenuRef = useRef(null);
 
   const handleLogoClick = (e) => {
     if (typeof window !== 'undefined' && window.location.pathname === '/') {
@@ -43,18 +44,15 @@ export default function GlobalHeader({ setView }) {
 
   // Cinematic Intro Sequence
   useEffect(() => {
-    // Only run on client
     if (typeof window === 'undefined') return;
     if (!crossRef.current || !logoLeftRef.current || !logoRightRef.current || !curtainRef.current) return;
 
     document.body.style.overflow = 'hidden';
     
-    // Calculate vertical distance from center to header
     const crossRect = crossRef.current.getBoundingClientRect();
     const centerY = window.innerHeight / 2;
     const targetY = centerY - crossRect.top - (crossRect.height / 2);
 
-    // Initial hidden states
     gsap.set(crossRef.current, { y: targetY });
     gsap.set(logoLeftRef.current, { x: 30, opacity: 0 });
     gsap.set(logoRightRef.current, { x: -30, opacity: 0 });
@@ -68,14 +66,11 @@ export default function GlobalHeader({ setView }) {
       }
     });
 
-    tl.to({}, { duration: 0.2 }) // Step A: Static for 200ms
-      .to(crossRef.current, { y: 0, ease: 'power4.inOut', duration: 1.2 }) // Step B: Ascension
-      // Fade the physical background curtain
+    tl.to({}, { duration: 0.2 })
+      .to(crossRef.current, { y: 0, ease: 'power4.inOut', duration: 1.2 })
       .to(curtainRef.current, { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, "-=0.6")
-      // Step C: Epistemic Split Reveal
       .to(logoLeftRef.current, { x: 0, opacity: 1, ease: 'expo.out', duration: 1.2 }, "-=0.8")
       .to(logoRightRef.current, { x: 0, opacity: 1, ease: 'expo.out', duration: 1.2 }, "-=1.2")
-      // The Radiating Menu Cascade
       .to('.nav-inner', { y: 0, opacity: 1, ease: 'power2.out', duration: 1 }, "-=1.0")
       .to('.nav-middle', { y: 0, opacity: 1, ease: 'power2.out', duration: 1 }, "-=0.9")
       .to('.nav-outer', { y: 0, opacity: 1, ease: 'power2.out', duration: 1 }, "-=0.8");
@@ -100,6 +95,20 @@ export default function GlobalHeader({ setView }) {
     }
   }, [isAboutOpen]);
 
+  // GSAP Mobile Glass Menu Animation
+  useEffect(() => {
+    if (isMenuOpen && mobileMenuRef.current) {
+      gsap.fromTo(mobileMenuRef.current,
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.35, ease: 'power3.out' }
+      );
+      gsap.fromTo('.mobile-item',
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, stagger: 0.06, ease: 'power2.out', delay: 0.1 }
+      );
+    }
+  }, [isMenuOpen]);
+
   const closeAbout = () => {
     gsap.to(aboutPanelRef.current, { y: 50, opacity: 0, duration: 0.3, ease: 'power2.in' });
     gsap.to(aboutOverlayRef.current, { opacity: 0, duration: 0.4, delay: 0.1, ease: 'power2.in', onComplete: () => setIsAboutOpen(false) });
@@ -113,16 +122,17 @@ export default function GlobalHeader({ setView }) {
         className="fixed inset-0 z-50 bg-[#F5F2EB] pointer-events-none"
       />
 
-      <header className="fixed top-0 left-0 w-full z-[60] mix-blend-difference text-canvas-dark pointer-events-auto">
-        <div className="max-w-screen-2xl mx-auto px-6 py-8 flex items-center justify-between">
+      <header className="fixed top-0 left-0 w-full z-[60] pointer-events-auto text-[#F5F2EB]">
+        <div className="max-w-screen-2xl mx-auto px-6 py-6 flex items-center justify-between">
+          
           {/* Left Links (Desktop) */}
-          <nav className="hidden md:flex items-center gap-12 text-core text-[11px] uppercase tracking-widest font-medium">
+          <nav className="hidden md:flex items-center gap-12 text-core text-[11px] uppercase tracking-widest font-semibold">
             <a 
               href="#" 
               onClick={handleLibraryClick}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-outer inline-block transition-opacity duration-300 hover:opacity-60"
+              className="nav-stagger nav-outer inline-block transition-opacity duration-300 hover:text-[#E87034]"
             >
               Library
             </a>
@@ -131,7 +141,7 @@ export default function GlobalHeader({ setView }) {
               onClick={(e) => { e.preventDefault(); setIsAboutOpen(true); }}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-middle inline-block transition-opacity duration-300 hover:opacity-60"
+              className="nav-stagger nav-middle inline-block transition-opacity duration-300 hover:text-[#E87034]"
             >
               About
             </a>
@@ -140,24 +150,24 @@ export default function GlobalHeader({ setView }) {
               onClick={(e) => e.preventDefault()}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-inner inline-block transition-opacity duration-300 hover:opacity-60"
+              className="nav-stagger nav-inner inline-block transition-opacity duration-300 hover:text-[#E87034]"
             >
               Journals
             </a>
           </nav>
 
-          {/* Center Logo Redesign */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-8 flex flex-col items-center justify-center cursor-pointer">
+          {/* Center Logo */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-6 flex flex-col items-center justify-center cursor-pointer">
             <Link href="/" onClick={handleLogoClick} className="block group">
               <div 
-                className="text-soul text-4xl sm:text-5xl font-semibold tracking-tight flex items-center gap-4"
-                style={{ lineHeight: 'normal', paddingBottom: '8px' }}
+                className="text-soul text-4xl sm:text-5xl font-semibold tracking-tight flex items-center gap-4 text-[#F7F4EF]"
+                style={{ lineHeight: 'normal', paddingBottom: '4px' }}
               >
                 <div>
                   <span ref={logoLeftRef} className="inline-block">বুক</span>
                 </div>
                 
-                <span ref={crossRef} className="font-sans font-light opacity-90 text-[#F5F2EB] text-2xl sm:text-3xl mt-1">╳</span>
+                <span ref={crossRef} className="font-sans font-light text-[#E87034] text-2xl sm:text-3xl mt-1">╳</span>
                 
                 <div>
                   <span ref={logoRightRef} className="inline-block">Boi</span>
@@ -167,12 +177,12 @@ export default function GlobalHeader({ setView }) {
           </div>
 
           {/* Right Links (Desktop) */}
-          <nav className="hidden md:flex items-center gap-10 text-core text-[11px] uppercase tracking-widest font-medium">
+          <nav className="hidden md:flex items-center gap-10 text-core text-[11px] uppercase tracking-widest font-semibold">
             <a 
               href="#"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave} 
-              className="nav-stagger nav-inner inline-block transition-opacity duration-300 hover:opacity-60"
+              className="nav-stagger nav-inner inline-block transition-opacity duration-300 hover:text-[#E87034]"
             >
               Preferences
             </a>
@@ -180,7 +190,7 @@ export default function GlobalHeader({ setView }) {
               href="#"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-middle inline-block transition-opacity duration-300 hover:opacity-60"
+              className="nav-stagger nav-middle inline-block transition-opacity duration-300 hover:text-[#E87034]"
             >
               Search
             </a>
@@ -188,29 +198,82 @@ export default function GlobalHeader({ setView }) {
               href="/settings/keys"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-outer inline-block transition-opacity duration-300 hover:opacity-60 flex items-center"
+              className="nav-stagger nav-outer inline-block transition-opacity duration-300 hover:text-[#E87034] flex items-center"
               title="API Settings"
             >
               <Key size={18} />
             </Link>
           </nav>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Burger Menu Button (Glassmorphic Circle Badge) */}
           <button 
-            className="md:hidden ml-auto z-50 text-canvas-dark nav-stagger nav-outer"
+            className="md:hidden ml-auto z-[70] w-11 h-11 rounded-full flex items-center justify-center text-[#F7F4EF] bg-black/50 backdrop-blur-xl border border-white/20 shadow-lg active:scale-95 transition-transform"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle Navigation Menu"
           >
-            {isMenuOpen ? <X size={24} strokeWidth={1} /> : <Menu size={24} strokeWidth={1} />}
+            {isMenuOpen ? <X size={20} strokeWidth={2} className="text-[#E87034]" /> : <Menu size={20} strokeWidth={2} />}
           </button>
         </div>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile Glassmorphism Menu Overlay (Full Portrait Support with Blur) */}
         {isMenuOpen ? (
-          <div className="fixed inset-0 bg-contrast-midnight text-canvas-light flex flex-col items-center justify-center gap-8 z-40 pointer-events-auto">
-            <a href="#" onClick={handleLibraryClick} className="text-soul text-4xl">Library</a>
-            <a href="#" className="text-soul text-4xl">Journals</a>
-            <a href="#" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); setIsAboutOpen(true); }} className="text-soul text-4xl">About</a>
-            <a href="#" className="text-soul text-4xl">Preferences</a>
+          <div 
+            ref={mobileMenuRef}
+            className="fixed inset-0 z-[65] flex flex-col justify-between p-8 pt-28 pointer-events-auto"
+            style={{
+              background: 'rgba(10, 13, 12, 0.92)',
+              backdropFilter: 'blur(28px)',
+              WebkitBackdropFilter: 'blur(28px)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.15)'
+            }}
+          >
+            <div className="flex flex-col gap-6 max-w-sm mx-auto w-full">
+              
+              <div className="mobile-item text-xs font-mono text-[#E87034] uppercase tracking-widest border-b border-white/10 pb-2">
+                [ NAVIGATION MENU ]
+              </div>
+
+              <a 
+                href="#" 
+                onClick={handleLibraryClick} 
+                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#E87034] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
+              >
+                <span className="flex items-center gap-3"><BookOpen size={22} className="text-[#E87034]" /> Library</span>
+                <span className="text-xs font-mono text-white/40">01</span>
+              </a>
+
+              <a 
+                href="#" 
+                onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); setIsAboutOpen(true); }} 
+                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#E87034] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
+              >
+                <span className="flex items-center gap-3"><Info size={22} className="text-[#E87034]" /> About</span>
+                <span className="text-xs font-mono text-white/40">02</span>
+              </a>
+
+              <a 
+                href="#" 
+                onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); }}
+                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#E87034] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
+              >
+                <span className="flex items-center gap-3"><BookMarked size={22} className="text-[#E87034]" /> Journals</span>
+                <span className="text-xs font-mono text-white/40">03</span>
+              </a>
+
+              <Link 
+                href="/settings/keys"
+                onClick={() => setIsMenuOpen(false)}
+                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#E87034] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
+              >
+                <span className="flex items-center gap-3"><Key size={22} className="text-[#E87034]" /> API Settings</span>
+                <span className="text-xs font-mono text-white/40">04</span>
+              </Link>
+            </div>
+
+            {/* Mobile Menu Footer */}
+            <div className="mobile-item max-w-sm mx-auto w-full text-center text-xs font-mono text-[#F7F4EF]/60 pt-6 border-t border-white/10">
+              BookXBoi Editorial Reader © 2026
+            </div>
           </div>
         ) : null}
       </header>
@@ -219,26 +282,27 @@ export default function GlobalHeader({ setView }) {
       {isAboutOpen ? (
         <div 
           ref={aboutOverlayRef} 
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-contrast-midnight/40 pointer-events-auto"
-          style={{ backdropFilter: 'blur(10px)' }}
+          className="fixed inset-0 z-[80] flex flex-col items-center justify-center p-6 bg-black/60 pointer-events-auto"
+          style={{ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
           onClick={closeAbout}
         >
           <div 
             ref={aboutPanelRef}
-            className="glass-panel-thick rounded-xl p-8 max-w-lg w-full text-canvas-light shadow-2xl relative"
+            className="rounded-2xl p-8 max-w-lg w-full text-[#F7F4EF] shadow-2xl relative border border-white/20"
+            style={{ background: 'rgba(14, 18, 17, 0.95)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <button 
               onClick={closeAbout} 
-              className="absolute top-6 right-6 text-canvas-light/60 hover:text-canvas-light transition-colors"
+              className="absolute top-6 right-6 text-[#F7F4EF]/60 hover:text-[#E87034] transition-colors"
             >
               <X size={20} strokeWidth={1.5} />
             </button>
-            <h3 className="text-soul text-3xl mb-6 text-white leading-tight">
+            <h3 className="text-soul text-3xl mb-6 text-white leading-tight font-serif" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
               The Synthesis of Art & Intellect.
             </h3>
-            <p className="text-core text-sm leading-relaxed text-canvas-light/80">
-              Boi is engineered for the deep reader. It is an offline-first sanctuary designed to strip away the noise of the modern web. By fusing absolute typographic precision with invisible, context-aware machine learning, it allows you to explore the profound depths of literature without ever breaking your focus.
+            <p className="text-core text-sm leading-relaxed text-[#F7F4EF]/85 font-sans">
+              BookXBoi is engineered for the deep reader. It is an offline-first sanctuary designed to strip away the noise of the modern web. By fusing absolute typographic precision with invisible, context-aware machine learning, it allows you to explore the profound depths of literature without ever breaking your focus.
             </p>
           </div>
         </div>

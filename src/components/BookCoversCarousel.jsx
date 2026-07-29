@@ -70,46 +70,46 @@ export default function BookCoversCarousel() {
     };
   }, []);
 
-  // Professional GSAP Seamless Marquee Animation with Entrance Acceleration -> Deceleration
+  // Organic, Calm, Relaxed Multi-Speed GSAP Marquee Animation
   useEffect(() => {
     if (!row1Ref.current || !row2Ref.current || !row3Ref.current) return;
 
     let ctx = gsap.context(() => {
-      // Row 1: Leftward continuous smooth marquee loop
+      // Row 1: Calm, serene leftward drift
       const row1Anim = gsap.to(row1Ref.current, {
         xPercent: -50,
         repeat: -1,
-        duration: 36,
+        duration: 72,
         ease: 'none'
       });
 
-      // Row 2: Rightward continuous smooth marquee loop
+      // Row 2: Relaxed, gentle rightward float
       const row2Anim = gsap.fromTo(row2Ref.current,
         { xPercent: -50 },
         {
           xPercent: 0,
           repeat: -1,
-          duration: 42,
+          duration: 88,
           ease: 'none'
         }
       );
 
-      // Row 3: Leftward continuous smooth marquee loop
+      // Row 3: Organic, steady leftward drift
       const row3Anim = gsap.to(row3Ref.current, {
         xPercent: -50,
         repeat: -1,
-        duration: 46,
+        duration: 64,
         ease: 'none'
       });
 
-      // Initial Entrance Speed Acceleration -> Smooth Deceleration to 1.0x
-      row1Anim.timeScale(3.2);
-      row2Anim.timeScale(3.2);
-      row3Anim.timeScale(3.2);
+      // Gentle Entrance Sweep -> Decelerates down to 1.0x over 3.2s
+      row1Anim.timeScale(1.8);
+      row2Anim.timeScale(1.8);
+      row3Anim.timeScale(1.8);
 
       gsap.to([row1Anim, row2Anim, row3Anim], {
         timeScale: 1.0,
-        duration: 2.4,
+        duration: 3.2,
         ease: 'power2.out',
         delay: 0.1
       });
@@ -196,11 +196,23 @@ export default function BookCoversCarousel() {
         </div>
       </div>
 
-      {/* 2. Soft Ambient Scrim Overlay (NO Black Rectangle or Harsh Blur Box!) */}
+      {/* 2. Targeted Left-Side Blackish Gradient & Blur Scrim for Maximum Text Contrast */}
+      <div 
+        className="absolute inset-y-0 left-0 w-full lg:w-[62%] pointer-events-none z-10"
+        style={{
+          background: 'linear-gradient(to right, rgba(10, 13, 12, 0.94) 0%, rgba(10, 13, 12, 0.82) 40%, rgba(10, 13, 12, 0.35) 75%, rgba(10, 13, 12, 0) 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0) 100%)'
+        }}
+      />
+
+      {/* Ambient Canvas Tint */}
       <div 
         className="absolute inset-0 pointer-events-none z-10"
         style={{
-          background: 'radial-gradient(ellipse at 35% 45%, rgba(10, 13, 12, 0.4) 0%, rgba(10, 13, 12, 0.75) 100%)'
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(10, 13, 12, 0.25) 0%, rgba(10, 13, 12, 0.6) 100%)'
         }}
       />
 
