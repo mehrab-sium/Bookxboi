@@ -9,6 +9,9 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const HERO_PREFIX_TEXT = "Don't let some grumpy word wake you up from the";
+const HERO_PREFIX_WORDS = HERO_PREFIX_TEXT.split(' ');
+
 export default function HeroLanding({ setView }) {
   const containerRef = useRef(null);
   const scrollRef = useRef(null);
@@ -104,50 +107,50 @@ export default function HeroLanding({ setView }) {
         });
       };
 
-      // GSAP Scramble Animation for Hero Title Prefix
-      const runHeroPrefixScramble = () => {
-        const el = heroPrefixRef.current;
-        if (!el) return;
-        const targetText = "Don't let some grumpy word wake you up from the";
-        const glyphs = '!@#$%^&*()_+-=[]{}|;:?/<>';
-        const length = targetText.length;
-        const state = { progress: 0 };
+      // GSAP SplitText Staggered Character Wave Reveal Loop for Hero Title Prefix
+      const runHeroPrefixSplitWave = () => {
+        const charEls = heroPrefixRef.current?.querySelectorAll('.prefix-split-char');
+        if (!charEls || !charEls.length) return;
 
-        gsap.to(state, {
-          progress: 1,
-          duration: 1.3,
-          ease: 'power2.inOut',
-          onUpdate: () => {
-            let res = '';
-            const resolvedCount = Math.floor(state.progress * length);
-            for (let i = 0; i < length; i++) {
-              if (targetText[i] === ' ') {
-                res += ' ';
-              } else if (i < resolvedCount) {
-                res += targetText[i];
-              } else {
-                res += glyphs[Math.floor(Math.random() * glyphs.length)];
-              }
-            }
-            if (el) el.textContent = res;
-          }
+        const tl = gsap.timeline();
+        tl.to(charEls, {
+          y: -10,
+          opacity: 0.25,
+          rotateX: -60,
+          stagger: {
+            amount: 0.55,
+            from: 'start'
+          },
+          duration: 0.35,
+          ease: 'power2.in'
+        })
+        .to(charEls, {
+          y: 0,
+          opacity: 1,
+          rotateX: 0,
+          stagger: {
+            amount: 0.55,
+            from: 'start'
+          },
+          duration: 0.55,
+          ease: 'back.out(1.8)'
         });
       };
 
-      // Initial Scramble Delays & Infinite Interval Loop
-      const scrambleTimeout = setTimeout(() => {
+      // Initial Delays & Infinite Interval Loop
+      const animationTimeout = setTimeout(() => {
         runBadgeScramble();
-        runHeroPrefixScramble();
-      }, 1500);
+        runHeroPrefixSplitWave();
+      }, 1800);
 
-      const scrambleInterval = setInterval(() => {
+      const animationInterval = setInterval(() => {
         runBadgeScramble();
-        runHeroPrefixScramble();
+        runHeroPrefixSplitWave();
       }, 6500);
 
       return () => {
-        clearTimeout(scrambleTimeout);
-        clearInterval(scrambleInterval);
+        clearTimeout(animationTimeout);
+        clearInterval(animationInterval);
       };
 
     }, containerRef);
@@ -184,16 +187,30 @@ export default function HeroLanding({ setView }) {
           <span>[ ISSUE 2026 — CLASSIC READER ]</span>
         </div>
 
-        {/* Hero Main Line with GSAP Matrix Scramble on Prefix Only */}
+        {/* Hero Main Line with Non-Jumpy GSAP SplitText Character Wave Animation */}
         <h1 
           className="hero-main-title text-soul text-[6.2vw] sm:text-[4.2vw] lg:text-[3.2vw] leading-[1.08] font-serif text-[#F7F4EF] drop-shadow-[0_6px_24px_rgba(0,0,0,0.95)] tracking-tight mb-3 sm:mb-5"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          style={{ fontFamily: "'Playfair Display', Georgia, serif", perspective: '800px' }}
         >
-          <span ref={heroPrefixRef}>Don't let some grumpy word wake you up from the</span>{' '}
-          <span className="italic font-normal underline gold-morph-text decoration-2 underline-offset-4 sm:underline-offset-6">classic world.</span>
+          <span ref={heroPrefixRef} className="inline">
+            {HERO_PREFIX_WORDS.map((word, wIdx) => (
+              <span key={`w-${wIdx}`} className="inline-block whitespace-nowrap mr-[0.28em]">
+                {word.split('').map((char, cIdx) => (
+                  <span 
+                    key={`c-${wIdx}-${cIdx}`} 
+                    className="prefix-split-char inline-block"
+                    style={{ transformOrigin: '50% 100%' }}
+                  >
+                    {char}
+                  </span>
+                ))}
+              </span>
+            ))}
+          </span>{' '}
+          <span className="italic font-normal underline gold-morph-text decoration-2 underline-offset-4 sm:underline-offset-6 inline-block">classic world.</span>
         </h1>
 
-        {/* Pure Floating Editorial Text Group (Removed Blurry Container Box) */}
+        {/* Pure Floating Editorial Text Group */}
         <div className="hero-sub-text mb-4 sm:mb-6 w-full relative pt-2">
           {/* Top Tag Badge with Modern GSAP Text Scramble Effect */}
           <div 
