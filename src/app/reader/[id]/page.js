@@ -218,16 +218,28 @@ export default function ReaderPage() {
             // Apply selected font, 0px-100px font-size, and line-height
             const fontObj = fontCatalog[readerFont] || fontCatalog.garamond;
             rend.themes.default({
-              "html, body": {
+              "html": {
                 "margin": "0 !important",
                 "padding": "0 !important",
-                "height": "100% !important",
+                "width": "100% !important",
+                "height": "100% !important"
+              },
+              "body": {
+                "margin": "0 !important",
+                "padding": "0 !important",
+                "width": "100% !important",
+                "max-width": "100% !important",
                 "box-sizing": "border-box !important"
               },
-              "p, div, span, blockquote": {
+              "p, div, span, blockquote, a, article, section": {
                 "font-family": `${fontObj.family} !important`,
                 "font-size": `${fontSizePx}px !important`,
-                "line-height": `${lineHeight} !important`
+                "line-height": `${lineHeight} !important`,
+                "max-width": "100% !important",
+                "width": "auto !important",
+                "word-break": "normal !important",
+                "overflow-wrap": "break-word !important",
+                "box-sizing": "border-box !important"
               },
               "img, svg": {
                 "max-width": "100% !important",
@@ -242,6 +254,34 @@ export default function ReaderPage() {
             rend.on('rendered', (section, view) => {
               const doc = view.document;
               if (!doc) return;
+
+              if (doc.head) {
+                let styleEl = doc.getElementById('bookxboi-layout-fix');
+                if (!styleEl) {
+                  styleEl = doc.createElement('style');
+                  styleEl.id = 'bookxboi-layout-fix';
+                  styleEl.textContent = `
+                    * {
+                      max-width: 100% !important;
+                      box-sizing: border-box !important;
+                    }
+                    html, body {
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      margin: 0 !important;
+                      padding: 0 4px !important;
+                    }
+                    p, div, span, blockquote, section, article {
+                      width: auto !important;
+                      max-width: 100% !important;
+                      word-break: normal !important;
+                      overflow-wrap: break-word !important;
+                      hyphens: none !important;
+                    }
+                  `;
+                  doc.head.appendChild(styleEl);
+                }
+              }
 
               const handleSelectionCheck = () => {
                 if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);

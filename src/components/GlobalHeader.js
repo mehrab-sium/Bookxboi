@@ -132,7 +132,8 @@ export default function GlobalHeader({ setView }) {
         className="fixed inset-0 z-50 bg-[#F5F2EB] pointer-events-none"
       />
 
-      <header className="fixed top-0 left-0 w-full z-[60] pointer-events-auto text-[#F5F2EB]">
+      {/* Header Container with Restored Mix-Blend-Difference Inversion Effect */}
+      <header className="fixed top-0 left-0 w-full z-[60] mix-blend-difference text-canvas-dark pointer-events-auto">
         <div className="max-w-screen-2xl mx-auto px-6 py-6 flex items-center justify-between">
           
           {/* Left Links (Desktop) */}
@@ -142,7 +143,7 @@ export default function GlobalHeader({ setView }) {
               onClick={handleLibraryClick}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-outer inline-block transition-colors duration-300 hover:text-[#D4AF37]"
+              className="nav-stagger nav-outer inline-block transition-opacity duration-300 hover:opacity-60"
             >
               Library
             </a>
@@ -151,7 +152,7 @@ export default function GlobalHeader({ setView }) {
               onClick={(e) => { e.preventDefault(); setIsAboutOpen(true); }}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-middle inline-block transition-colors duration-300 hover:text-[#D4AF37]"
+              className="nav-stagger nav-middle inline-block transition-opacity duration-300 hover:opacity-60"
             >
               About
             </a>
@@ -160,13 +161,13 @@ export default function GlobalHeader({ setView }) {
               onClick={(e) => e.preventDefault()}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-inner inline-block transition-colors duration-300 hover:text-[#D4AF37]"
+              className="nav-stagger nav-inner inline-block transition-opacity duration-300 hover:opacity-60"
             >
               Journals
             </a>
           </nav>
 
-          {/* Center Logo */}
+          {/* Center Logo with Restored Mix-Blend-Difference Inversion */}
           <div className="absolute left-1/2 -translate-x-1/2 top-6 flex flex-col items-center justify-center cursor-pointer">
             <Link href="/" onClick={handleLogoClick} className="block group">
               <div 
@@ -177,7 +178,7 @@ export default function GlobalHeader({ setView }) {
                   <span ref={logoLeftRef} className="inline-block">বুক</span>
                 </div>
                 
-                <span ref={crossRef} className="font-sans font-light header-gold-morph-text text-2xl sm:text-3xl mt-1">╳</span>
+                <span ref={crossRef} className="font-sans font-light text-[#F5F2EB] text-2xl sm:text-3xl mt-1">╳</span>
                 
                 <div>
                   <span ref={logoRightRef} className="inline-block">Boi</span>
@@ -192,7 +193,7 @@ export default function GlobalHeader({ setView }) {
               href="#"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave} 
-              className="nav-stagger nav-inner inline-block transition-colors duration-300 hover:text-[#D4AF37]"
+              className="nav-stagger nav-inner inline-block transition-opacity duration-300 hover:opacity-60"
             >
               Preferences
             </a>
@@ -200,7 +201,7 @@ export default function GlobalHeader({ setView }) {
               href="#"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-middle inline-block transition-colors duration-300 hover:text-[#D4AF37]"
+              className="nav-stagger nav-middle inline-block transition-opacity duration-300 hover:opacity-60"
             >
               Search
             </a>
@@ -208,20 +209,20 @@ export default function GlobalHeader({ setView }) {
               href="/settings/keys"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-outer inline-block transition-colors duration-300 hover:text-[#D4AF37] flex items-center"
+              className="nav-stagger nav-outer inline-block transition-opacity duration-300 hover:opacity-60 flex items-center"
               title="API Settings"
             >
               <Key size={18} />
             </Link>
           </nav>
 
-          {/* Mobile Burger Menu Button (Glassmorphic Circle Badge) */}
+          {/* Mobile Burger Menu Button */}
           <button 
-            className="md:hidden ml-auto z-[70] w-11 h-11 rounded-full flex items-center justify-center text-[#F7F4EF] bg-black/50 backdrop-blur-xl border border-white/20 shadow-lg active:scale-95 transition-transform"
+            className="md:hidden ml-auto z-[70] w-10 h-10 rounded-full flex items-center justify-center text-[#F7F4EF] bg-black/40 backdrop-blur-md border border-white/20 active:scale-95 transition-transform"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle Navigation Menu"
           >
-            {isMenuOpen ? <X size={20} strokeWidth={2} className="header-gold-morph-text" /> : <Menu size={20} strokeWidth={2} />}
+            {isMenuOpen ? <X size={20} strokeWidth={2} className="text-[#D4AF37]" /> : <Menu size={20} strokeWidth={2} />}
           </button>
         </div>
 
@@ -229,7 +230,7 @@ export default function GlobalHeader({ setView }) {
         {isMenuOpen ? (
           <div 
             ref={mobileMenuRef}
-            className="fixed inset-0 z-[65] flex flex-col justify-between p-8 pt-28 pointer-events-auto"
+            className="fixed inset-0 z-[65] flex flex-col justify-between p-8 pt-28 pointer-events-auto mix-blend-normal"
             style={{
               background: 'rgba(10, 13, 12, 0.94)',
               backdropFilter: 'blur(28px)',
@@ -239,7 +240,7 @@ export default function GlobalHeader({ setView }) {
           >
             <div className="flex flex-col gap-6 max-w-sm mx-auto w-full">
               
-              <div className="mobile-item text-xs font-mono header-gold-morph-text uppercase tracking-widest border-b border-white/10 pb-2">
+              <div className="mobile-item text-xs font-mono text-[#D4AF37] uppercase tracking-widest border-b border-white/10 pb-2">
                 [ NAVIGATION MENU ]
               </div>
 
@@ -248,7 +249,7 @@ export default function GlobalHeader({ setView }) {
                 onClick={handleLibraryClick} 
                 className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#D4AF37] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
               >
-                <span className="flex items-center gap-3"><BookOpen size={22} className="header-gold-morph-text" /> Library</span>
+                <span className="flex items-center gap-3"><BookOpen size={22} className="text-[#D4AF37]" /> Library</span>
                 <span className="text-xs font-mono text-white/40">01</span>
               </a>
 
@@ -257,7 +258,7 @@ export default function GlobalHeader({ setView }) {
                 onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); setIsAboutOpen(true); }} 
                 className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#D4AF37] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
               >
-                <span className="flex items-center gap-3"><Info size={22} className="header-gold-morph-text" /> About</span>
+                <span className="flex items-center gap-3"><Info size={22} className="text-[#D4AF37]" /> About</span>
                 <span className="text-xs font-mono text-white/40">02</span>
               </a>
 
@@ -266,7 +267,7 @@ export default function GlobalHeader({ setView }) {
                 onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); }}
                 className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#D4AF37] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
               >
-                <span className="flex items-center gap-3"><BookMarked size={22} className="header-gold-morph-text" /> Journals</span>
+                <span className="flex items-center gap-3"><BookMarked size={22} className="text-[#D4AF37]" /> Journals</span>
                 <span className="text-xs font-mono text-white/40">03</span>
               </a>
 
@@ -275,7 +276,7 @@ export default function GlobalHeader({ setView }) {
                 onClick={() => setIsMenuOpen(false)}
                 className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#D4AF37] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
               >
-                <span className="flex items-center gap-3"><Key size={22} className="header-gold-morph-text" /> API Settings</span>
+                <span className="flex items-center gap-3"><Key size={22} className="text-[#D4AF37]" /> API Settings</span>
                 <span className="text-xs font-mono text-white/40">04</span>
               </Link>
             </div>
@@ -292,7 +293,7 @@ export default function GlobalHeader({ setView }) {
       {isAboutOpen ? (
         <div 
           ref={aboutOverlayRef} 
-          className="fixed inset-0 z-[80] flex flex-col items-center justify-center p-6 bg-black/60 pointer-events-auto"
+          className="fixed inset-0 z-[80] flex flex-col items-center justify-center p-6 bg-black/60 pointer-events-auto mix-blend-normal"
           style={{ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
           onClick={closeAbout}
         >

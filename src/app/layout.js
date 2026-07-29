@@ -42,7 +42,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link 
-          href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@400;500&family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Nunito:wght@400;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" 
+          href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@400;500&family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Noto+Serif+Bengali:wght@400;600;700&family=Nunito:wght@400;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Spectral:ital,wght@0,400;0,600;1,400&family=Tiro+Bangla:ital@0;1&display=swap" 
           rel="stylesheet" 
         />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -53,10 +53,7 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <PWAInstallPrompt />
-      {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js?token=156719aa-e436-428a-b8cb-b91925964ffb"></script>
-{/* impeccable-live-end */}
-</body>
+      </body>
     </html>
   );
 }
