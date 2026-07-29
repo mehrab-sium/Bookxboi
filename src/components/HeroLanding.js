@@ -12,6 +12,7 @@ if (typeof window !== 'undefined') {
 export default function HeroLanding({ setView }) {
   const containerRef = useRef(null);
   const scrollRef = useRef(null);
+  const scrambleRef = useRef(null);
 
   useEffect(() => {
     let ctx = gsap.context(() => {
@@ -74,6 +75,48 @@ export default function HeroLanding({ setView }) {
           .to(morphTargetsBorder, { borderColor: '#F7F4EF', duration: 2.2, ease: 'sine.inOut' });
       }
 
+      // Modern GSAP Matrix Scramble Text Animation Loop
+      const runTextScramble = () => {
+        const el = scrambleRef.current;
+        if (!el) return;
+        const targetText = '[ CONTEXT ENGINE v2.0 ]';
+        const glyphs = '!@#$%^&*()_+-=[]{}|;:?/<>';
+        const length = targetText.length;
+        const state = { progress: 0 };
+
+        gsap.to(state, {
+          progress: 1,
+          duration: 1.1,
+          ease: 'power2.inOut',
+          onUpdate: () => {
+            let res = '';
+            const resolvedCount = Math.floor(state.progress * length);
+            for (let i = 0; i < length; i++) {
+              if (i < resolvedCount) {
+                res += targetText[i];
+              } else {
+                res += glyphs[Math.floor(Math.random() * glyphs.length)];
+              }
+            }
+            if (el) el.textContent = res;
+          }
+        });
+      };
+
+      // Initial Scramble Delay & Infinite Interval Loop
+      const scrambleTimeout = setTimeout(() => {
+        runTextScramble();
+      }, 1500);
+
+      const scrambleInterval = setInterval(() => {
+        runTextScramble();
+      }, 6000);
+
+      return () => {
+        clearTimeout(scrambleTimeout);
+        clearInterval(scrambleInterval);
+      };
+
     }, containerRef);
     
     return () => ctx.revert();
@@ -98,27 +141,27 @@ export default function HeroLanding({ setView }) {
   return (
     <section 
       ref={containerRef} 
-      className="relative w-full min-h-[100dvh] h-[100dvh] flex flex-col justify-between px-5 sm:px-12 lg:px-20 pt-16 sm:pt-24 pb-8 sm:pb-14 overflow-hidden pointer-events-auto bg-transparent"
+      className="relative w-full min-h-[100dvh] h-[100dvh] flex flex-col justify-between px-5 sm:px-10 lg:px-16 pt-16 sm:pt-24 pb-8 sm:pb-14 overflow-hidden pointer-events-auto bg-transparent"
     >
-      {/* Content Container (Compact Scaled Down Layout for Android Portrait Alignment) */}
-      <div className="flex-1 flex flex-col justify-center items-start text-left max-w-2xl relative z-20 pointer-events-auto my-auto">
+      {/* Content Container (Strict 55%-60% Vertical Left Column Grid Boundary) */}
+      <div className="flex-1 flex flex-col justify-center items-start text-left w-full max-w-[84vw] md:max-w-[55%] lg:max-w-[52%] xl:max-w-[48%] relative z-20 pointer-events-auto my-auto">
         
         {/* Editorial Sub-Badge */}
         <div className="hero-sub-text inline-flex items-center px-3 py-0.5 text-[#F7F4EF]/85 border-l-2 gold-morph-border pl-2.5 mb-3 sm:mb-5 font-mono text-[9.5px] sm:text-[11px] uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md rounded-r-md">
           <span>[ ISSUE 2026 — CLASSIC READER ]</span>
         </div>
 
-        {/* Hero Main Line (Scaled Down on Android Mobile for Balanced Screen Proportion) */}
+        {/* Hero Main Line (Strictly Constrained Within Left 55% Column Grid) */}
         <h1 
-          className="hero-main-title text-soul text-[6.2vw] sm:text-[4.8vw] lg:text-[3.8vw] leading-[1.08] font-serif text-[#F7F4EF] drop-shadow-[0_6px_24px_rgba(0,0,0,0.95)] tracking-tight mb-3 sm:mb-6"
+          className="hero-main-title text-soul text-[6.2vw] sm:text-[4.2vw] lg:text-[3.2vw] leading-[1.08] font-serif text-[#F7F4EF] drop-shadow-[0_6px_24px_rgba(0,0,0,0.95)] tracking-tight mb-3 sm:mb-5"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
           Don't let some grumpy word wake you up from the <span className="italic font-normal underline gold-morph-text decoration-2 underline-offset-4 sm:underline-offset-6">classic world.</span>
         </h1>
 
-        {/* Frosted Glass Quote Card with Neo Editorial Bengali Typography */}
+        {/* Frosted Glass Quote Card (Strictly Aligned Within 55% Column Grid) */}
         <div 
-          className="hero-sub-text p-3.5 sm:p-7 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 w-full max-w-lg relative shadow-2xl"
+          className="hero-sub-text p-3.5 sm:p-6 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 w-full relative shadow-2xl"
           style={{
             background: 'rgba(14, 18, 17, 0.68)',
             backdropFilter: 'blur(16px)',
@@ -127,8 +170,11 @@ export default function HeroLanding({ setView }) {
             boxShadow: '0 16px 40px rgba(0,0,0,0.45)'
           }}
         >
-          {/* Top Tag Badge */}
-          <div className="absolute -top-2.5 left-4 gold-morph-bg text-[#111111] font-mono text-[8.5px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border border-[#111111] rounded-sm transition-colors">
+          {/* Top Tag Badge with Modern GSAP Text Scramble Effect */}
+          <div 
+            ref={scrambleRef}
+            className="absolute -top-2.5 left-4 gold-morph-bg text-[#111111] font-mono text-[8.5px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border border-[#111111] rounded-sm transition-colors scramble-badge-text"
+          >
             [ CONTEXT ENGINE v2.0 ]
           </div>
           
@@ -166,7 +212,7 @@ export default function HeroLanding({ setView }) {
 
       {/* GSAP Scroll Indicator */}
       <div 
-        className="relative z-20 flex items-center gap-2.5 text-[#F7F4EF] scroll-wrapper-anim pointer-events-auto cursor-pointer mt-2 sm:mt-8 self-start bg-[#111111]/80 backdrop-blur-md px-3 py-1 sm:px-4 sm:py-2 border border-white/20 gold-morph-border shadow-[3px_3px_0px_#D4AF37] rounded-md" 
+        className="relative z-20 flex items-center gap-2.5 text-[#F7F4EF] scroll-wrapper-anim pointer-events-auto cursor-pointer mt-2 sm:mt-6 self-start bg-[#111111]/80 backdrop-blur-md px-3 py-1 sm:px-4 sm:py-2 border border-white/20 gold-morph-border shadow-[3px_3px_0px_#D4AF37] rounded-md" 
         ref={scrollRef}
         onClick={handleEnterLibrary}
       >
