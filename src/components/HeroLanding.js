@@ -17,28 +17,28 @@ export default function HeroLanding({ setView }) {
     let ctx = gsap.context(() => {
       // Hero Entrance Animations
       gsap.fromTo('.hero-main-title', 
-        { y: 40, opacity: 0 },
+        { y: 35, opacity: 0 },
         { y: 0, opacity: 1, duration: 1.2, ease: 'power3.out', delay: 0.2 }
       );
 
       gsap.fromTo('.hero-sub-text', 
-        { y: 30, opacity: 0 }, 
+        { y: 25, opacity: 0 }, 
         { y: 0, opacity: 1, duration: 1.1, ease: 'power3.out', delay: 0.4 }
       );
 
       gsap.fromTo('.hero-small-line', 
-        { y: 20, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 1.0, ease: 'power3.out', delay: 0.6 }
+        { y: 18, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 1.0, ease: 'power3.out', delay: 0.55 }
       );
 
       gsap.fromTo('.hero-cta-btn', 
         { scale: 0.9, opacity: 0 }, 
-        { scale: 1, opacity: 1, duration: 0.9, ease: 'back.out(1.7)', delay: 0.8 }
+        { scale: 1, opacity: 1, duration: 0.9, ease: 'back.out(1.7)', delay: 0.7 }
       );
 
       // Bouncing Scroll Indicator & Ring Pulse
       if (scrollRef.current) {
-        gsap.to('.scroll-wrapper-anim', { y: 10, yoyo: true, repeat: -1, ease: "power1.inOut", duration: 1.6 });
+        gsap.to('.scroll-wrapper-anim', { y: 8, yoyo: true, repeat: -1, ease: "power1.inOut", duration: 1.6 });
         gsap.fromTo('.ring-ping', 
           { scale: 1, opacity: 0.8 }, 
           { scale: 3, opacity: 0, repeat: -1, duration: 1.6, ease: "power2.out" }
@@ -98,27 +98,27 @@ export default function HeroLanding({ setView }) {
   return (
     <section 
       ref={containerRef} 
-      className="relative w-full min-h-[85vh] sm:min-h-screen flex flex-col justify-between px-5 sm:px-12 lg:px-20 pt-20 sm:pt-28 pb-10 sm:pb-16 overflow-hidden pointer-events-auto"
+      className="relative w-full min-h-[100dvh] h-[100dvh] flex flex-col justify-between px-5 sm:px-12 lg:px-20 pt-16 sm:pt-24 pb-8 sm:pb-14 overflow-hidden pointer-events-auto bg-transparent"
     >
-      {/* Content Container (Compact Responsive Layout for Android & Desktop) */}
-      <div className="flex-1 flex flex-col justify-center items-start text-left max-w-3xl relative z-20 pointer-events-auto mt-2 sm:mt-8">
+      {/* Content Container (Compact Scaled Down Layout for Android Portrait Alignment) */}
+      <div className="flex-1 flex flex-col justify-center items-start text-left max-w-2xl relative z-20 pointer-events-auto my-auto">
         
-        {/* Clean Editorial Sub-Badge (Removed AI Slop Star Icon) */}
-        <div className="hero-sub-text inline-flex items-center px-3 py-1 text-[#F7F4EF]/85 border-l-2 gold-morph-border pl-3 mb-4 sm:mb-6 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md rounded-r-md">
+        {/* Editorial Sub-Badge */}
+        <div className="hero-sub-text inline-flex items-center px-3 py-0.5 text-[#F7F4EF]/85 border-l-2 gold-morph-border pl-2.5 mb-3 sm:mb-5 font-mono text-[9.5px] sm:text-[11px] uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md rounded-r-md">
           <span>[ ISSUE 2026 — CLASSIC READER ]</span>
         </div>
 
-        {/* Hero Main Line (Scaled Down on Mobile for Breathable Layout) */}
+        {/* Hero Main Line (Scaled Down on Android Mobile for Balanced Screen Proportion) */}
         <h1 
-          className="hero-main-title text-soul text-[7.5vw] sm:text-[5.5vw] lg:text-[4vw] leading-[1.06] font-serif text-[#F7F4EF] drop-shadow-[0_6px_24px_rgba(0,0,0,0.95)] tracking-tight mb-4 sm:mb-8"
+          className="hero-main-title text-soul text-[6.2vw] sm:text-[4.8vw] lg:text-[3.8vw] leading-[1.08] font-serif text-[#F7F4EF] drop-shadow-[0_6px_24px_rgba(0,0,0,0.95)] tracking-tight mb-3 sm:mb-6"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          Don't let some grumpy word wake you up from the <span className="italic font-normal underline gold-morph-text decoration-2 underline-offset-4 sm:underline-offset-8">classic world.</span>
+          Don't let some grumpy word wake you up from the <span className="italic font-normal underline gold-morph-text decoration-2 underline-offset-4 sm:underline-offset-6">classic world.</span>
         </h1>
 
         {/* Frosted Glass Quote Card with Neo Editorial Bengali Typography */}
         <div 
-          className="hero-sub-text p-4 sm:p-7 rounded-2xl mb-5 sm:mb-8 w-full max-w-xl relative shadow-2xl"
+          className="hero-sub-text p-3.5 sm:p-7 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 w-full max-w-lg relative shadow-2xl"
           style={{
             background: 'rgba(14, 18, 17, 0.68)',
             backdropFilter: 'blur(16px)',
@@ -128,13 +128,13 @@ export default function HeroLanding({ setView }) {
           }}
         >
           {/* Top Tag Badge */}
-          <div className="absolute -top-3 left-5 gold-morph-bg text-[#111111] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 border border-[#111111] rounded-sm transition-colors">
+          <div className="absolute -top-2.5 left-4 gold-morph-bg text-[#111111] font-mono text-[8.5px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border border-[#111111] rounded-sm transition-colors">
             [ CONTEXT ENGINE v2.0 ]
           </div>
           
           {/* Sub-text — Fancy Bengali Serif Typography */}
           <h2 
-            className="text-lg sm:text-2xl font-medium text-[#F7F4EF] mb-2 sm:mb-3 leading-snug pt-1"
+            className="text-base sm:text-2xl font-medium text-[#F7F4EF] mb-1.5 sm:mb-3 leading-snug pt-0.5"
             style={{ fontFamily: "'Tiro Bangla', 'Noto Serif Bengali', serif" }}
           >
             Just select it, <span className="gold-morph-text font-bold underline decoration-2 underline-offset-4">context চলে আসবে।</span>
@@ -142,7 +142,7 @@ export default function HeroLanding({ setView }) {
 
           {/* Small Line — Elegant Bengali Typography */}
           <p 
-            className="hero-small-line text-xs sm:text-base text-[#F7F4EF]/85 leading-relaxed font-normal"
+            className="hero-small-line text-[11px] sm:text-base text-[#F7F4EF]/85 leading-relaxed font-normal"
             style={{ fontFamily: "'Tiro Bangla', 'Anek Bangla', serif" }}
           >
             আমরা শুধু context দেই, ব্যাখ্যা না। পড়াটা পুরোপুরি আপনার থাকুক।
@@ -150,12 +150,12 @@ export default function HeroLanding({ setView }) {
         </div>
 
         {/* Primary Call to Action Button */}
-        <div className="hero-cta-btn flex flex-wrap items-center gap-4">
+        <div className="hero-cta-btn flex flex-wrap items-center gap-3">
           <button 
             onClick={handleEnterLibrary}
             onMouseEnter={handleBtnEnter}
             onMouseLeave={handleBtnLeave}
-            className="px-6 sm:px-8 py-3 sm:py-4 gold-morph-bg text-[#111111] text-[11px] sm:text-xs font-mono font-bold uppercase tracking-[0.2em] flex items-center gap-2.5 transition-all duration-300 pointer-events-auto border-2 border-[#111111] shadow-[4px_4px_0px_#F7F4EF] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_#F7F4EF] rounded-lg"
+            className="px-5 sm:px-8 py-2.5 sm:py-4 gold-morph-bg text-[#111111] text-[10px] sm:text-xs font-mono font-bold uppercase tracking-[0.2em] flex items-center gap-2 transition-all duration-300 pointer-events-auto border-2 border-[#111111] shadow-[4px_4px_0px_#F7F4EF] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_#F7F4EF] rounded-lg"
           >
             <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#111111]" />
             Enter Library ↵
@@ -166,15 +166,15 @@ export default function HeroLanding({ setView }) {
 
       {/* GSAP Scroll Indicator */}
       <div 
-        className="relative z-20 flex items-center gap-3 text-[#F7F4EF] scroll-wrapper-anim pointer-events-auto cursor-pointer mt-6 sm:mt-12 self-start bg-[#111111]/80 backdrop-blur-md px-3.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 gold-morph-border shadow-[3px_3px_0px_#D4AF37] rounded-md" 
+        className="relative z-20 flex items-center gap-2.5 text-[#F7F4EF] scroll-wrapper-anim pointer-events-auto cursor-pointer mt-2 sm:mt-8 self-start bg-[#111111]/80 backdrop-blur-md px-3 py-1 sm:px-4 sm:py-2 border border-white/20 gold-morph-border shadow-[3px_3px_0px_#D4AF37] rounded-md" 
         ref={scrollRef}
         onClick={handleEnterLibrary}
       >
         <div className="relative flex items-center justify-center">
-          <div className="ring-ping absolute w-3.5 h-3.5 border gold-morph-border"></div>
+          <div className="ring-ping absolute w-3 h-3 sm:w-3.5 sm:h-3.5 border gold-morph-border"></div>
           <div className="w-1.5 h-1.5 gold-morph-bg rounded-full"></div>
         </div>
-        <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest font-bold text-[#F7F4EF]">
+        <span className="text-[8.5px] sm:text-[10px] font-mono uppercase tracking-widest font-bold text-[#F7F4EF]">
           Scroll to explore archive ↓
         </span>
       </div>

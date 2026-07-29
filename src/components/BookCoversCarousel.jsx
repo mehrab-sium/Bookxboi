@@ -42,6 +42,7 @@ export default function BookCoversCarousel() {
   const row1Ref = useRef(null);
   const row2Ref = useRef(null);
   const row3Ref = useRef(null);
+  const grainRef = useRef(null);
 
   // Sync custom uploaded user books dynamically while guaranteeing all static covers
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function BookCoversCarousel() {
     };
   }, []);
 
-  // Organic, Calm, Relaxed Multi-Speed GSAP Marquee Animation
+  // Organic, Calm, Relaxed Multi-Speed GSAP Marquee Animation + Grain Micro-Animation
   useEffect(() => {
     if (!row1Ref.current || !row2Ref.current || !row3Ref.current) return;
 
@@ -113,6 +114,17 @@ export default function BookCoversCarousel() {
         ease: 'power2.out',
         delay: 0.1
       });
+
+      // Filmic Analog Grain Texture Micro-Flicker for Timeless Vibe
+      if (grainRef.current) {
+        gsap.to(grainRef.current, {
+          opacity: 0.08,
+          repeat: -1,
+          yoyo: true,
+          duration: 0.18,
+          ease: 'steps(3)'
+        });
+      }
     });
 
     return () => ctx.revert();
@@ -125,8 +137,16 @@ export default function BookCoversCarousel() {
   const row3Covers = coverStream;
 
   return (
-    <div className="fixed inset-0 w-full h-full z-0 overflow-hidden bg-[#0A0D0C] select-none pointer-events-none">
+    <div className="fixed inset-0 w-full h-[100dvh] z-0 overflow-hidden bg-[#0A0D0C] select-none pointer-events-none">
       
+      {/* SVG Grain Noise Filter Definition */}
+      <svg className="hidden">
+        <filter id="grain-noise-filter">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+      </svg>
+
       {/* 1. Angled Infinite GSAP Sliding Book Cover Cards Marquee Grid */}
       <div 
         className="absolute inset-0 w-[145%] h-[145%] -left-[22%] -top-[22%] flex flex-col justify-center gap-7 opacity-90"
@@ -141,7 +161,7 @@ export default function BookCoversCarousel() {
             {row1Covers.map((src, i) => (
               <div 
                 key={`r1-${i}`}
-                className="relative w-[140px] h-[210px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
+                className="relative w-[130px] h-[195px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
               >
                 <img 
                   src={src} 
@@ -161,7 +181,7 @@ export default function BookCoversCarousel() {
             {row2Covers.map((src, i) => (
               <div 
                 key={`r2-${i}`}
-                className="relative w-[140px] h-[210px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
+                className="relative w-[130px] h-[195px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
               >
                 <img 
                   src={src} 
@@ -181,7 +201,7 @@ export default function BookCoversCarousel() {
             {row3Covers.map((src, i) => (
               <div 
                 key={`r3-${i}`}
-                className="relative w-[140px] h-[210px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
+                className="relative w-[130px] h-[195px] sm:w-[165px] sm:h-[245px] lg:w-[190px] lg:h-[280px] rounded-xl overflow-hidden shadow-[0_14px_32px_rgba(0,0,0,0.75)] border-2 border-white/20 bg-[#111614] shrink-0"
               >
                 <img 
                   src={src} 
@@ -196,7 +216,7 @@ export default function BookCoversCarousel() {
         </div>
       </div>
 
-      {/* 2. Targeted Left-Side Blackish Gradient & Blur Scrim for Maximum Text Contrast */}
+      {/* 2. Targeted Left-Side Gradient & Blur Scrim for Maximum Text Contrast */}
       <div 
         className="absolute inset-y-0 left-0 w-full lg:w-[62%] pointer-events-none z-10"
         style={{
@@ -205,6 +225,17 @@ export default function BookCoversCarousel() {
           WebkitBackdropFilter: 'blur(8px)',
           maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0) 100%)',
           WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0) 100%)'
+        }}
+      />
+
+      {/* 3. Filmic Analog Grain Texture Layer Blended with Gradient Blur Position */}
+      <div 
+        ref={grainRef}
+        className="absolute inset-y-0 left-0 w-full lg:w-[62%] pointer-events-none z-15 opacity-[0.05] mix-blend-overlay"
+        style={{
+          filter: 'url(#grain-noise-filter)',
+          maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)'
         }}
       />
 
