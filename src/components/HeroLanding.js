@@ -3,7 +3,7 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Image from 'next/image';
+import { ArrowDown, BookOpen, Sparkles } from 'lucide-react';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -15,41 +15,36 @@ export default function HeroLanding({ setView }) {
 
   useEffect(() => {
     let ctx = gsap.context(() => {
-      // 4. The Multi-Dimensional Hero Curtain Reveal
-      // Animate "The Modern"
-      gsap.fromTo('.modern-text', 
-        { y: 60, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.2, ease: 'power3.out', delay: 0.2 }
+      // Hero Title Entrance
+      gsap.fromTo('.hero-main-title', 
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.3, ease: 'power3.out', delay: 0.2 }
       );
 
-      // Animate "Archive" sliding down from behind "The Modern"
-      gsap.fromTo('.archive-text', 
-        { y: '-100%' }, 
-        { y: '0%', duration: 1.4, ease: 'power3.out', delay: 0.4 }
+      // Sub-text Entrance
+      gsap.fromTo('.hero-sub-text', 
+        { y: 35, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 1.2, ease: 'power3.out', delay: 0.5 }
       );
 
-      // General Text Reveal
-      gsap.utils.toArray('.reveal-text').forEach((el, i) => {
-        gsap.fromTo(el, 
-          { y: 40, opacity: 0 },
-          {
-            y: 0, opacity: 1, duration: 1.2, ease: 'power3.out',
-            delay: 0.6 + (i * 0.1),
-            scrollTrigger: {
-              trigger: el,
-              start: "top 95%",
-              toggleActions: "play none none reverse"
-            }
-          }
-        );
-      });
+      // Small Supporting Line Entrance
+      gsap.fromTo('.hero-small-line', 
+        { y: 25, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 1.1, ease: 'power3.out', delay: 0.7 }
+      );
 
-      // Bouncing Loop Indicator & Ring
+      // CTA Button Entrance
+      gsap.fromTo('.hero-cta-btn', 
+        { scale: 0.9, opacity: 0 }, 
+        { scale: 1, opacity: 1, duration: 1.0, ease: 'back.out(1.7)', delay: 0.9 }
+      );
+
+      // Bouncing Scroll Indicator & Golden Ring Pulse
       if (scrollRef.current) {
-        gsap.to('.scroll-wrapper-anim', { y: 15, yoyo: true, repeat: -1, ease: "power1.inOut", duration: 1.5 });
+        gsap.to('.scroll-wrapper-anim', { y: 12, yoyo: true, repeat: -1, ease: "power1.inOut", duration: 1.6 });
         gsap.fromTo('.ring-ping', 
           { scale: 1, opacity: 0.8 }, 
-          { scale: 3, opacity: 0, repeat: -1, duration: 1.5, ease: "power2.out" }
+          { scale: 3, opacity: 0, repeat: -1, duration: 1.6, ease: "power2.out" }
         );
       }
 
@@ -68,77 +63,85 @@ export default function HeroLanding({ setView }) {
   };
 
   const handleBtnEnter = (e) => {
-    gsap.to(e.currentTarget, { scale: 1.02, borderColor: 'rgba(28,35,33,0.8)', ease: 'power2.out', duration: 0.3 });
+    gsap.to(e.currentTarget, { scale: 1.03, boxShadow: '0 12px 35px rgba(212,175,55,0.4)', ease: 'power2.out', duration: 0.3 });
   };
   const handleBtnLeave = (e) => {
-    gsap.to(e.currentTarget, { scale: 1, borderColor: 'rgba(28,35,33,1)', ease: 'power2.out', duration: 0.3 });
+    gsap.to(e.currentTarget, { scale: 1, boxShadow: '0 8px 25px rgba(0,0,0,0.3)', ease: 'power2.out', duration: 0.3 });
   };
 
   return (
     <section 
       ref={containerRef} 
-      className="relative w-full h-[150vh] overflow-hidden"
+      className="relative w-full min-h-[92vh] sm:min-h-screen flex flex-col justify-between px-6 sm:px-12 lg:px-20 pt-28 pb-16 overflow-hidden pointer-events-none"
     >
-
-      <div className="sticky top-0 w-full h-screen flex flex-col lg:flex-row items-center justify-between px-6 lg:px-12 py-24 gap-12 overflow-hidden pointer-events-none">
+      {/* Content Container (Left Aligned over the Gradual Blur Mask) */}
+      <div className="flex-1 flex flex-col justify-center items-start text-left max-w-3xl relative z-20 pointer-events-auto mt-4 sm:mt-10">
         
-        {/* Massive Typography - Left Aligned with negative space */}
-        <div className="flex-1 flex flex-col justify-center items-start text-left relative z-10 w-full h-full pt-32 sm:pt-36 lg:pt-28 pl-6 lg:pl-32 xl:pl-40 text-container pointer-events-auto">
-          
-          <div className="relative mb-0" style={{ zIndex: 20 }}>
-            {/* 2. Typography Contrast with Crisp Drop Shadows */}
-            <h1 
-              className="modern-text text-soul text-[12vw] sm:text-[10vw] lg:text-[8vw] xl:text-[9vw] whitespace-nowrap relative pt-4 pr-4 drop-shadow-[0_6px_28px_rgba(0,0,0,0.95)]" 
-              style={{ color: '#F5F2EB' }}
-            >
-              The Modern
-            </h1>
-          </div>
-          
-          {/* Adjusted overlap slightly so it sits nicely under */}
-          <div className="relative overflow-hidden z-10" style={{ marginTop: '-0.5vw' }}>
-            <h1 
-              className="archive-text text-soul text-[12vw] sm:text-[10vw] lg:text-[8vw] xl:text-[9vw] italic ml-8 lg:ml-24 whitespace-nowrap pt-2 drop-shadow-[0_6px_28px_rgba(0,0,0,0.95)]" 
-              style={{ color: '#F5F2EB' }}
-            >
-              Archive
-            </h1>
-          </div>
+        {/* Editorial Sub-Badge */}
+        <div className="hero-sub-text inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 mb-6 shadow-lg">
+          <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+          <span className="text-xs uppercase tracking-widest font-semibold text-[#F5F2EB]/90">
+            BookXBoi Classic Reader
+          </span>
+        </div>
 
-          <div className="reveal-text mt-8 lg:mt-16 max-w-sm p-6 rounded-2xl backdrop-blur-md bg-[#0a0c0b]/50 border border-[#F5F2EB]/15 shadow-2xl relative z-30">
-            <p className="text-core text-sm leading-relaxed text-[#F5F2EB] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] font-normal">
-              A bespoke digital reading experience. Hyper-premium, editorial-grade architecture designed for deep focus and aesthetic immersion.
-            </p>
-            
-            <button 
-              onClick={handleEnterLibrary}
-              onMouseEnter={handleBtnEnter}
-              onMouseLeave={handleBtnLeave}
-              className="mt-6 px-6 py-3 rounded-full border border-[#F5F2EB] text-[#F5F2EB] text-core text-xs uppercase tracking-widest hover:bg-[#F5F2EB] hover:text-[#111413] transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto shadow-lg"
-            >
-              Enter Library
-            </button>
-          </div>
-          
-          {/* 5. Restore the GSAP Scroll Indicator with Golden Rings */}
-          <div className="absolute bottom-12 left-6 lg:left-12 flex flex-col items-center gap-12 text-[#F5F2EB]/80 scroll-wrapper-anim" ref={scrollRef}>
-            <span className="text-[10px] tracking-widest uppercase font-sans -rotate-90 whitespace-nowrap origin-bottom text-[#F5F2EB]/50 mt-12 mb-8">
-              Scroll to Explore
-            </span>
-            <div className="flex flex-col items-center gap-0">
-              <div style={{ width: '1px', height: '60px', background: 'rgba(245, 242, 235, 0.3)' }}></div>
-              <div className="relative flex items-center justify-center mt-1">
-                {/* Ping Ring */}
-                <div className="ring-ping absolute w-4 h-4 rounded-full border border-[rgba(212,175,55,0.8)]"></div>
-                {/* Solid Dot */}
-                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#d4af37' }} className="relative z-10 shadow-[0_0_8px_rgba(212,175,55,0.8)]"></div>
-              </div>
-            </div>
-          </div>
-          
+        {/* Hero Main Line */}
+        <h1 
+          className="hero-main-title text-soul text-[9.5vw] sm:text-[6vw] lg:text-[4.2vw] leading-[1.08] font-serif text-[#F5F2EB] drop-shadow-[0_8px_32px_rgba(0,0,0,0.9)] tracking-tight mb-8"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Don't let some grumpy word wake you up from the classic world.
+        </h1>
+
+        {/* Glassmorphic Quote & Explanatory Card */}
+        <div className="hero-sub-text backdrop-blur-xl bg-[#0b0e0d]/75 border border-[#F5F2EB]/15 p-6 sm:p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] mb-8 w-full max-w-xl">
+          {/* Sub-text */}
+          <h2 
+            className="text-xl sm:text-2xl font-medium text-[#F5F2EB] mb-3 leading-snug"
+            style={{ fontFamily: "'Hind Siliguri', var(--font-inter), sans-serif" }}
+          >
+            Just select it, <span className="text-[#d4af37] font-semibold border-b border-[#d4af37]/40 pb-0.5">context চলে আসবে।</span>
+          </h2>
+
+          {/* Small Line */}
+          <p 
+            className="hero-small-line text-sm sm:text-base text-[#F5F2EB]/80 leading-relaxed font-normal"
+            style={{ fontFamily: "'Hind Siliguri', var(--font-inter), sans-serif" }}
+          >
+            আমরা শুধু context দেই, ব্যাখ্যা না। পড়াটা পুরোপুরি আপনার থাকুক।
+          </p>
+        </div>
+
+        {/* Primary Call to Action Button */}
+        <div className="hero-cta-btn flex flex-wrap items-center gap-4">
+          <button 
+            onClick={handleEnterLibrary}
+            onMouseEnter={handleBtnEnter}
+            onMouseLeave={handleBtnLeave}
+            className="px-8 py-4 rounded-full bg-gradient-to-r from-[#d4af37] to-[#f5f2eb] text-[#111413] text-sm font-bold uppercase tracking-widest flex items-center gap-3 transition-all duration-300 pointer-events-auto shadow-xl"
+          >
+            <BookOpen className="w-4 h-4 text-[#111413]" />
+            Enter Library
+          </button>
         </div>
 
       </div>
+
+      {/* GSAP Scroll Indicator with Golden Rings */}
+      <div 
+        className="relative z-20 flex items-center gap-4 text-[#F5F2EB]/80 scroll-wrapper-anim pointer-events-auto cursor-pointer mt-12 self-start" 
+        ref={scrollRef}
+        onClick={handleEnterLibrary}
+      >
+        <div className="relative flex items-center justify-center">
+          <div className="ring-ping absolute w-5 h-5 rounded-full border border-[#d4af37]"></div>
+          <div className="w-2.5 h-2.5 rounded-full bg-[#d4af37] shadow-[0_0_10px_#d4af37]"></div>
+        </div>
+        <span className="text-xs uppercase tracking-widest font-sans font-semibold text-[#F5F2EB]/70">
+          Scroll to explore library
+        </span>
+      </div>
+
     </section>
   );
 }
