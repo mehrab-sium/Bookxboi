@@ -12,7 +12,8 @@ if (typeof window !== 'undefined') {
 export default function HeroLanding({ setView }) {
   const containerRef = useRef(null);
   const scrollRef = useRef(null);
-  const scrambleRef = useRef(null);
+  const badgeScrambleRef = useRef(null);
+  const heroPrefixRef = useRef(null);
 
   useEffect(() => {
     let ctx = gsap.context(() => {
@@ -75,9 +76,9 @@ export default function HeroLanding({ setView }) {
           .to(morphTargetsBorder, { borderColor: '#F7F4EF', duration: 2.2, ease: 'sine.inOut' });
       }
 
-      // Modern GSAP Matrix Scramble Text Animation Loop
-      const runTextScramble = () => {
-        const el = scrambleRef.current;
+      // GSAP Scramble Animation for Badge
+      const runBadgeScramble = () => {
+        const el = badgeScrambleRef.current;
         if (!el) return;
         const targetText = '[ CONTEXT ENGINE v2.0 ]';
         const glyphs = '!@#$%^&*()_+-=[]{}|;:?/<>';
@@ -103,14 +104,46 @@ export default function HeroLanding({ setView }) {
         });
       };
 
-      // Initial Scramble Delay & Infinite Interval Loop
+      // GSAP Scramble Animation for Hero Title Prefix
+      const runHeroPrefixScramble = () => {
+        const el = heroPrefixRef.current;
+        if (!el) return;
+        const targetText = "Don't let some grumpy word wake you up from the";
+        const glyphs = '!@#$%^&*()_+-=[]{}|;:?/<>';
+        const length = targetText.length;
+        const state = { progress: 0 };
+
+        gsap.to(state, {
+          progress: 1,
+          duration: 1.3,
+          ease: 'power2.inOut',
+          onUpdate: () => {
+            let res = '';
+            const resolvedCount = Math.floor(state.progress * length);
+            for (let i = 0; i < length; i++) {
+              if (targetText[i] === ' ') {
+                res += ' ';
+              } else if (i < resolvedCount) {
+                res += targetText[i];
+              } else {
+                res += glyphs[Math.floor(Math.random() * glyphs.length)];
+              }
+            }
+            if (el) el.textContent = res;
+          }
+        });
+      };
+
+      // Initial Scramble Delays & Infinite Interval Loop
       const scrambleTimeout = setTimeout(() => {
-        runTextScramble();
+        runBadgeScramble();
+        runHeroPrefixScramble();
       }, 1500);
 
       const scrambleInterval = setInterval(() => {
-        runTextScramble();
-      }, 6000);
+        runBadgeScramble();
+        runHeroPrefixScramble();
+      }, 6500);
 
       return () => {
         clearTimeout(scrambleTimeout);
@@ -151,36 +184,28 @@ export default function HeroLanding({ setView }) {
           <span>[ ISSUE 2026 — CLASSIC READER ]</span>
         </div>
 
-        {/* Hero Main Line (Strictly Constrained Within Left 55% Column Grid) */}
+        {/* Hero Main Line with GSAP Matrix Scramble on Prefix Only */}
         <h1 
           className="hero-main-title text-soul text-[6.2vw] sm:text-[4.2vw] lg:text-[3.2vw] leading-[1.08] font-serif text-[#F7F4EF] drop-shadow-[0_6px_24px_rgba(0,0,0,0.95)] tracking-tight mb-3 sm:mb-5"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          Don't let some grumpy word wake you up from the <span className="italic font-normal underline gold-morph-text decoration-2 underline-offset-4 sm:underline-offset-6">classic world.</span>
+          <span ref={heroPrefixRef}>Don't let some grumpy word wake you up from the</span>{' '}
+          <span className="italic font-normal underline gold-morph-text decoration-2 underline-offset-4 sm:underline-offset-6">classic world.</span>
         </h1>
 
-        {/* Frosted Glass Quote Card (Strictly Aligned Within 55% Column Grid) */}
-        <div 
-          className="hero-sub-text p-3.5 sm:p-6 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 w-full relative shadow-2xl"
-          style={{
-            background: 'rgba(14, 18, 17, 0.68)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
-            boxShadow: '0 16px 40px rgba(0,0,0,0.45)'
-          }}
-        >
+        {/* Pure Floating Editorial Text Group (Removed Blurry Container Box) */}
+        <div className="hero-sub-text mb-4 sm:mb-6 w-full relative pt-2">
           {/* Top Tag Badge with Modern GSAP Text Scramble Effect */}
           <div 
-            ref={scrambleRef}
-            className="absolute -top-2.5 left-4 gold-morph-bg text-[#111111] font-mono text-[8.5px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border border-[#111111] rounded-sm transition-colors scramble-badge-text"
+            ref={badgeScrambleRef}
+            className="inline-block gold-morph-bg text-[#111111] font-mono text-[8.5px] sm:text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 border border-[#111111] rounded-sm transition-colors mb-3 shadow-md"
           >
             [ CONTEXT ENGINE v2.0 ]
           </div>
           
           {/* Sub-text — Fancy Bengali Serif Typography */}
           <h2 
-            className="text-base sm:text-2xl font-medium text-[#F7F4EF] mb-1.5 sm:mb-3 leading-snug pt-0.5"
+            className="text-base sm:text-2xl font-medium text-[#F7F4EF] mb-2 sm:mb-3 leading-snug drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]"
             style={{ fontFamily: "'Tiro Bangla', 'Noto Serif Bengali', serif" }}
           >
             Just select it, <span className="gold-morph-text font-bold underline decoration-2 underline-offset-4">context চলে আসবে।</span>
@@ -188,7 +213,7 @@ export default function HeroLanding({ setView }) {
 
           {/* Small Line — Elegant Bengali Typography */}
           <p 
-            className="hero-small-line text-[11px] sm:text-base text-[#F7F4EF]/85 leading-relaxed font-normal"
+            className="hero-small-line text-[11px] sm:text-base text-[#F7F4EF]/90 leading-relaxed font-normal drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]"
             style={{ fontFamily: "'Tiro Bangla', 'Anek Bangla', serif" }}
           >
             আমরা শুধু context দেই, ব্যাখ্যা না। পড়াটা পুরোপুরি আপনার থাকুক।
