@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Key, BookOpen, Info, Sliders, BookMarked, Search } from 'lucide-react';
+import { Menu, X, Key, BookOpen, Info, BookMarked } from 'lucide-react';
 import gsap from 'gsap';
 
 export default function GlobalHeader({ setView }) {
@@ -17,7 +17,7 @@ export default function GlobalHeader({ setView }) {
   const aboutPanelRef = useRef(null);
   const mobileMenuRef = useRef(null);
 
-  const handleLogoClick = (e) => {
+  const handleLogoClick = () => {
     if (typeof window !== 'undefined' && window.location.pathname === '/') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -42,7 +42,7 @@ export default function GlobalHeader({ setView }) {
     setIsMenuOpen(false);
   };
 
-  // Cinematic Intro Sequence
+  // Cinematic Intro Sequence & GSAP Gold Color Morph Loop
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!crossRef.current || !logoLeftRef.current || !logoRightRef.current || !curtainRef.current) return;
@@ -74,6 +74,16 @@ export default function GlobalHeader({ setView }) {
       .to('.nav-inner', { y: 0, opacity: 1, ease: 'power2.out', duration: 1 }, "-=1.0")
       .to('.nav-middle', { y: 0, opacity: 1, ease: 'power2.out', duration: 1 }, "-=0.9")
       .to('.nav-outer', { y: 0, opacity: 1, ease: 'power2.out', duration: 1 }, "-=0.8");
+
+    // GSAP Gold Accent Color Morphing Timeline
+    const goldTextTargets = gsap.utils.toArray('.header-gold-morph-text');
+    if (goldTextTargets.length) {
+      gsap.timeline({ repeat: -1, yoyo: true })
+        .to(goldTextTargets, { color: '#D4AF37', duration: 2.2, ease: 'sine.inOut' })
+        .to(goldTextTargets, { color: '#F5D061', duration: 2.2, ease: 'sine.inOut' })
+        .to(goldTextTargets, { color: '#FFFFFF', duration: 2.2, ease: 'sine.inOut' })
+        .to(goldTextTargets, { color: '#F7F4EF', duration: 2.2, ease: 'sine.inOut' });
+    }
 
     return () => {
       document.body.style.overflow = '';
@@ -132,7 +142,7 @@ export default function GlobalHeader({ setView }) {
               onClick={handleLibraryClick}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-outer inline-block transition-opacity duration-300 hover:text-[#E87034]"
+              className="nav-stagger nav-outer inline-block transition-colors duration-300 hover:text-[#D4AF37]"
             >
               Library
             </a>
@@ -141,7 +151,7 @@ export default function GlobalHeader({ setView }) {
               onClick={(e) => { e.preventDefault(); setIsAboutOpen(true); }}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-middle inline-block transition-opacity duration-300 hover:text-[#E87034]"
+              className="nav-stagger nav-middle inline-block transition-colors duration-300 hover:text-[#D4AF37]"
             >
               About
             </a>
@@ -150,7 +160,7 @@ export default function GlobalHeader({ setView }) {
               onClick={(e) => e.preventDefault()}
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-inner inline-block transition-opacity duration-300 hover:text-[#E87034]"
+              className="nav-stagger nav-inner inline-block transition-colors duration-300 hover:text-[#D4AF37]"
             >
               Journals
             </a>
@@ -167,7 +177,7 @@ export default function GlobalHeader({ setView }) {
                   <span ref={logoLeftRef} className="inline-block">বুক</span>
                 </div>
                 
-                <span ref={crossRef} className="font-sans font-light text-[#E87034] text-2xl sm:text-3xl mt-1">╳</span>
+                <span ref={crossRef} className="font-sans font-light header-gold-morph-text text-2xl sm:text-3xl mt-1">╳</span>
                 
                 <div>
                   <span ref={logoRightRef} className="inline-block">Boi</span>
@@ -182,7 +192,7 @@ export default function GlobalHeader({ setView }) {
               href="#"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave} 
-              className="nav-stagger nav-inner inline-block transition-opacity duration-300 hover:text-[#E87034]"
+              className="nav-stagger nav-inner inline-block transition-colors duration-300 hover:text-[#D4AF37]"
             >
               Preferences
             </a>
@@ -190,7 +200,7 @@ export default function GlobalHeader({ setView }) {
               href="#"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-middle inline-block transition-opacity duration-300 hover:text-[#E87034]"
+              className="nav-stagger nav-middle inline-block transition-colors duration-300 hover:text-[#D4AF37]"
             >
               Search
             </a>
@@ -198,7 +208,7 @@ export default function GlobalHeader({ setView }) {
               href="/settings/keys"
               onMouseEnter={handleLinkEnter}
               onMouseLeave={handleLinkLeave}
-              className="nav-stagger nav-outer inline-block transition-opacity duration-300 hover:text-[#E87034] flex items-center"
+              className="nav-stagger nav-outer inline-block transition-colors duration-300 hover:text-[#D4AF37] flex items-center"
               title="API Settings"
             >
               <Key size={18} />
@@ -211,17 +221,17 @@ export default function GlobalHeader({ setView }) {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle Navigation Menu"
           >
-            {isMenuOpen ? <X size={20} strokeWidth={2} className="text-[#E87034]" /> : <Menu size={20} strokeWidth={2} />}
+            {isMenuOpen ? <X size={20} strokeWidth={2} className="header-gold-morph-text" /> : <Menu size={20} strokeWidth={2} />}
           </button>
         </div>
 
-        {/* Mobile Glassmorphism Menu Overlay (Full Portrait Support with Blur) */}
+        {/* Mobile Glassmorphism Menu Overlay */}
         {isMenuOpen ? (
           <div 
             ref={mobileMenuRef}
             className="fixed inset-0 z-[65] flex flex-col justify-between p-8 pt-28 pointer-events-auto"
             style={{
-              background: 'rgba(10, 13, 12, 0.92)',
+              background: 'rgba(10, 13, 12, 0.94)',
               backdropFilter: 'blur(28px)',
               WebkitBackdropFilter: 'blur(28px)',
               borderBottom: '1px solid rgba(255, 255, 255, 0.15)'
@@ -229,43 +239,43 @@ export default function GlobalHeader({ setView }) {
           >
             <div className="flex flex-col gap-6 max-w-sm mx-auto w-full">
               
-              <div className="mobile-item text-xs font-mono text-[#E87034] uppercase tracking-widest border-b border-white/10 pb-2">
+              <div className="mobile-item text-xs font-mono header-gold-morph-text uppercase tracking-widest border-b border-white/10 pb-2">
                 [ NAVIGATION MENU ]
               </div>
 
               <a 
                 href="#" 
                 onClick={handleLibraryClick} 
-                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#E87034] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
+                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#D4AF37] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
               >
-                <span className="flex items-center gap-3"><BookOpen size={22} className="text-[#E87034]" /> Library</span>
+                <span className="flex items-center gap-3"><BookOpen size={22} className="header-gold-morph-text" /> Library</span>
                 <span className="text-xs font-mono text-white/40">01</span>
               </a>
 
               <a 
                 href="#" 
                 onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); setIsAboutOpen(true); }} 
-                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#E87034] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
+                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#D4AF37] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
               >
-                <span className="flex items-center gap-3"><Info size={22} className="text-[#E87034]" /> About</span>
+                <span className="flex items-center gap-3"><Info size={22} className="header-gold-morph-text" /> About</span>
                 <span className="text-xs font-mono text-white/40">02</span>
               </a>
 
               <a 
                 href="#" 
                 onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); }}
-                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#E87034] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
+                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#D4AF37] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
               >
-                <span className="flex items-center gap-3"><BookMarked size={22} className="text-[#E87034]" /> Journals</span>
+                <span className="flex items-center gap-3"><BookMarked size={22} className="header-gold-morph-text" /> Journals</span>
                 <span className="text-xs font-mono text-white/40">03</span>
               </a>
 
               <Link 
                 href="/settings/keys"
                 onClick={() => setIsMenuOpen(false)}
-                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#E87034] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
+                className="mobile-item text-soul text-3xl text-[#F7F4EF] hover:text-[#D4AF37] flex items-center justify-between py-2 border-b border-white/5 transition-colors"
               >
-                <span className="flex items-center gap-3"><Key size={22} className="text-[#E87034]" /> API Settings</span>
+                <span className="flex items-center gap-3"><Key size={22} className="header-gold-morph-text" /> API Settings</span>
                 <span className="text-xs font-mono text-white/40">04</span>
               </Link>
             </div>
@@ -294,7 +304,7 @@ export default function GlobalHeader({ setView }) {
           >
             <button 
               onClick={closeAbout} 
-              className="absolute top-6 right-6 text-[#F7F4EF]/60 hover:text-[#E87034] transition-colors"
+              className="absolute top-6 right-6 text-[#F7F4EF]/60 hover:text-[#D4AF37] transition-colors"
             >
               <X size={20} strokeWidth={1.5} />
             </button>
