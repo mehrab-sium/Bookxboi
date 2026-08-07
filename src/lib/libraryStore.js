@@ -239,9 +239,9 @@ export const PUBLIC_BOOKS = [
     id: 'pub-steinbeck-east-of-eden',
     name: 'East of Eden',
     author: 'John Steinbeck',
-    fileName: 'Steinbeck_East_of_Eden.epub',
-    url: '/books/Steinbeck_East_of_Eden.epub',
-    coverImage: '/covers/Steinbeck_East_of_Eden.jpg',
+    fileName: 'John Steinbeck - East of Eden.epub',
+    url: '/books/John Steinbeck - East of Eden.epub',
+    coverImage: '/covers/John_Steinbeck_East_of_Eden.jpeg',
     type: 'epub',
     addedAt: 1700000024000
   },
@@ -364,6 +364,76 @@ export const PUBLIC_BOOKS = [
     coverImage: '/covers/Sun_Tzu_The_Art_of_War.jpeg',
     type: 'epub',
     addedAt: 1700000036000
+  },
+  {
+    id: 'pub-homer-odyssey',
+    name: 'The Odyssey',
+    author: 'Homer',
+    fileName: 'Homer - The Odyssey.epub',
+    url: '/books/Homer - The Odyssey.epub',
+    coverImage: '/covers/Homer_The_Odyssey.jpg',
+    type: 'epub',
+    addedAt: 1700000037000
+  },
+  {
+    id: 'pub-goncharov-oblomov',
+    name: 'Oblomov',
+    author: 'Ivan Goncharov',
+    fileName: 'Ivan Goncharov - Oblomov.epub',
+    url: '/books/Ivan Goncharov - Oblomov.epub',
+    coverImage: '/covers/Ivan_Goncharov_Oblomov.jpg',
+    type: 'epub',
+    addedAt: 1700000038000
+  },
+  {
+    id: 'pub-sartre-nausea',
+    name: 'Nausea',
+    author: 'Jean-Paul Sartre',
+    fileName: 'Jean-Paul Sartre - Nausea.epub',
+    url: '/books/Jean-Paul Sartre - Nausea.epub',
+    coverImage: '/covers/Jean_Paul_Sartre_Nausea.jpeg',
+    type: 'epub',
+    addedAt: 1700000039000
+  },
+  {
+    id: 'pub-milton-paradise-lost',
+    name: 'Paradise Lost',
+    author: 'John Milton',
+    fileName: 'John Milton - Paradise Lost.epub',
+    url: '/books/John Milton - Paradise Lost.epub',
+    coverImage: '/covers/John_Milton_Paradise_Lost.jpeg',
+    type: 'epub',
+    addedAt: 1700000040000
+  },
+  {
+    id: 'pub-steinbeck-grapes-of-wrath',
+    name: 'The Grapes of Wrath',
+    author: 'John Steinbeck',
+    fileName: 'John Steinbeck - The Grapes of Wrath.epub',
+    url: '/books/John Steinbeck - The Grapes of Wrath.epub',
+    coverImage: '/covers/John_Steinbeck_The_Grapes_of_Wrath.jpeg',
+    type: 'epub',
+    addedAt: 1700000041000
+  },
+  {
+    id: 'pub-tolstoy-death-of-ivan-ilyich',
+    name: 'The Death of Ivan Ilyich and Other Stories',
+    author: 'Leo Tolstoy',
+    fileName: 'Leo Tolstoy - The Death of Ivan Ilyich and Other Stories.epub',
+    url: '/books/Leo Tolstoy - The Death of Ivan Ilyich and Other Stories.epub',
+    coverImage: '/covers/Leo_Tolstoy_The_Death_of_Ivan_Ilyich_and_Other_Stories.jpg',
+    type: 'epub',
+    addedAt: 1700000042000
+  },
+  {
+    id: 'pub-hugo-les-miserables',
+    name: 'Les Misérables',
+    author: 'Victor Hugo',
+    fileName: 'Victor Hugo - Les Miserables.epub',
+    url: '/books/Victor Hugo - Les Miserables.epub',
+    coverImage: '/covers/Victor_Hugo_Les_Miserables.jpeg',
+    type: 'epub',
+    addedAt: 1700000043000
   },
   {
     id: 'sample-pdf',

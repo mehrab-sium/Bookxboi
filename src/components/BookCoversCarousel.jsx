@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { PUBLIC_BOOKS, getAllBooks } from '../lib/libraryStore';
 
-// All 37 exact book cover image assets residing in /public/covers
+// All 44 exact book cover image assets residing in /public/covers
 const ALL_PROJECT_COVERS = [
   '/covers/Alexandre_Dumas_The_Count_of_Monte_Cristo.jpeg',
   '/covers/Ali_Madonna_in_a_Fur_Coat.jpg',
@@ -22,10 +22,17 @@ const ALL_PROJECT_COVERS = [
   '/covers/Dostoyevsky_White_Nights.jpg',
   '/covers/Goethe_Sorrows_of_Young_Werther.jpeg',
   '/covers/H._G._Wells_The_Time_Machine_and_The_Invisible_Man.jpg',
+  '/covers/Homer_The_Odyssey.jpg',
   '/covers/Huxley_Brave_New_World.jpeg',
+  '/covers/Ivan_Goncharov_Oblomov.jpg',
+  '/covers/Jean_Paul_Sartre_Nausea.jpeg',
+  '/covers/John_Milton_Paradise_Lost.jpeg',
+  '/covers/John_Steinbeck_East_of_Eden.jpeg',
+  '/covers/John_Steinbeck_The_Grapes_of_Wrath.jpeg',
   '/covers/Kafka_Metamorphosis.jpg',
   '/covers/Kafka_The_Trial.png',
   '/covers/Kierkegaard_Fear_and_Trembling.jpg',
+  '/covers/Leo_Tolstoy_The_Death_of_Ivan_Ilyich_and_Other_Stories.jpg',
   '/covers/Leo_Tolstoy_War_and_Peace.jpg',
   '/covers/Machiavelli_The_Prince.jpeg',
   '/covers/Marcus_Aurelius_Meditations.jpeg',
@@ -37,10 +44,10 @@ const ALL_PROJECT_COVERS = [
   '/covers/Plato_Symposium.jpeg',
   '/covers/Plato_The_Republic.jpg',
   '/covers/Ray_Bradbury_Fahrenheit_451.jpg',
-  '/covers/Steinbeck_East_of_Eden.jpg',
   '/covers/Steinbeck_The_Pearl.jpg',
   '/covers/Sun_Tzu_The_Art_of_War.jpeg',
   '/covers/Tolstoy_Anna_Karenina.jpg',
+  '/covers/Victor_Hugo_Les_Miserables.jpeg',
   '/covers/Wilde_The_Picture_of_Dorian_Gray.jpg',
   '/covers/Woolf_Mrs_Dalloway.jpg'
 ];
