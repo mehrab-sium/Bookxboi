@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { PUBLIC_BOOKS, getAllBooks } from '../lib/libraryStore';
 
-// All 33 exact book cover image assets residing in /public/covers
+// All 37 exact book cover image assets residing in /public/covers
 const ALL_PROJECT_COVERS = [
   '/covers/Alexandre_Dumas_The_Count_of_Monte_Cristo.jpeg',
   '/covers/Ali_Madonna_in_a_Fur_Coat.jpg',
@@ -34,8 +34,12 @@ const ALL_PROJECT_COVERS = [
   '/covers/Nietzsche_Thus_Spoke_Zarathustra.jpg',
   '/covers/Orwell_1984.jpg',
   '/covers/Plath_The_Bell_Jar.jpeg',
+  '/covers/Plato_Symposium.jpeg',
+  '/covers/Plato_The_Republic.jpg',
+  '/covers/Ray_Bradbury_Fahrenheit_451.jpg',
   '/covers/Steinbeck_East_of_Eden.jpg',
   '/covers/Steinbeck_The_Pearl.jpg',
+  '/covers/Sun_Tzu_The_Art_of_War.jpeg',
   '/covers/Tolstoy_Anna_Karenina.jpg',
   '/covers/Wilde_The_Picture_of_Dorian_Gray.jpg',
   '/covers/Woolf_Mrs_Dalloway.jpg'

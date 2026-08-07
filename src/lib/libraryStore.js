@@ -326,6 +326,46 @@ export const PUBLIC_BOOKS = [
     addedAt: 1700000032000
   },
   {
+    id: 'pub-plato-symposium',
+    name: 'Symposium',
+    author: 'Plato',
+    fileName: 'Plato - Symposium.epub',
+    url: '/books/Plato - Symposium.epub',
+    coverImage: '/covers/Plato_Symposium.jpeg',
+    type: 'epub',
+    addedAt: 1700000033000
+  },
+  {
+    id: 'pub-plato-the-republic',
+    name: 'The Republic',
+    author: 'Plato',
+    fileName: 'Plato - The Republic.epub',
+    url: '/books/Plato - The Republic.epub',
+    coverImage: '/covers/Plato_The_Republic.jpg',
+    type: 'epub',
+    addedAt: 1700000034000
+  },
+  {
+    id: 'pub-bradbury-fahrenheit-451',
+    name: 'Fahrenheit 451',
+    author: 'Ray Bradbury',
+    fileName: 'Ray Bradbury - Fahrenheit 451.epub',
+    url: '/books/Ray Bradbury - Fahrenheit 451.epub',
+    coverImage: '/covers/Ray_Bradbury_Fahrenheit_451.jpg',
+    type: 'epub',
+    addedAt: 1700000035000
+  },
+  {
+    id: 'pub-sun-tzu-the-art-of-war',
+    name: 'The Art of War',
+    author: 'Sun Tzu',
+    fileName: 'Sun Tzu - The Art of War.epub',
+    url: '/books/Sun Tzu - The Art of War.epub',
+    coverImage: '/covers/Sun_Tzu_The_Art_of_War.jpeg',
+    type: 'epub',
+    addedAt: 1700000036000
+  },
+  {
     id: 'sample-pdf',
     name: 'Aetherius: Architecture of Light',
     author: 'Aetherius Editorial',
