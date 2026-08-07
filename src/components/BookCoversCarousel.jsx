@@ -4,8 +4,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { PUBLIC_BOOKS, getAllBooks } from '../lib/libraryStore';
 
-// All 29 exact book cover image assets residing in /public/covers
+// All 33 exact book cover image assets residing in /public/covers
 const ALL_PROJECT_COVERS = [
+  '/covers/Alexandre_Dumas_The_Count_of_Monte_Cristo.jpeg',
   '/covers/Ali_Madonna_in_a_Fur_Coat.jpg',
   '/covers/Bronte_Jane_Eyre.jpg',
   '/covers/Bronte_Wuthering_Heights.jpg',
@@ -20,12 +21,15 @@ const ALL_PROJECT_COVERS = [
   '/covers/Dostoyevsky_The_Brothers_Karamazov.jpg',
   '/covers/Dostoyevsky_White_Nights.jpg',
   '/covers/Goethe_Sorrows_of_Young_Werther.jpeg',
+  '/covers/H._G._Wells_The_Time_Machine_and_The_Invisible_Man.jpg',
   '/covers/Huxley_Brave_New_World.jpeg',
   '/covers/Kafka_Metamorphosis.jpg',
   '/covers/Kafka_The_Trial.png',
   '/covers/Kierkegaard_Fear_and_Trembling.jpg',
+  '/covers/Leo_Tolstoy_War_and_Peace.jpg',
   '/covers/Machiavelli_The_Prince.jpeg',
   '/covers/Marcus_Aurelius_Meditations.jpeg',
+  '/covers/Miguel_de_Cervantes_Don_Quixote.jpeg',
   '/covers/Nietzsche_Beyond_Good_and_Evil.jpg',
   '/covers/Nietzsche_Thus_Spoke_Zarathustra.jpg',
   '/covers/Orwell_1984.jpg',

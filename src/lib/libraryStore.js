@@ -286,6 +286,46 @@ export const PUBLIC_BOOKS = [
     addedAt: 1700000028000
   },
   {
+    id: 'pub-dumas-count-of-monte-cristo',
+    name: 'The Count of Monte Cristo',
+    author: 'Alexandre Dumas',
+    fileName: 'Alexandre Dumas - The Count of Monte Cristo.epub',
+    url: '/books/Alexandre Dumas - The Count of Monte Cristo.epub',
+    coverImage: '/covers/Alexandre_Dumas_The_Count_of_Monte_Cristo.jpeg',
+    type: 'epub',
+    addedAt: 1700000029000
+  },
+  {
+    id: 'pub-wells-time-machine',
+    name: 'The Time Machine & The Invisible Man',
+    author: 'H. G. Wells',
+    fileName: 'H. G. Wells - The Time Machine and The Invisible Man.epub',
+    url: '/books/H. G. Wells - The Time Machine and The Invisible Man.epub',
+    coverImage: '/covers/H._G._Wells_The_Time_Machine_and_The_Invisible_Man.jpg',
+    type: 'epub',
+    addedAt: 1700000030000
+  },
+  {
+    id: 'pub-tolstoy-war-and-peace',
+    name: 'War and Peace',
+    author: 'Leo Tolstoy',
+    fileName: 'Leo Tolstoy - War and Peace.epub',
+    url: '/books/Leo Tolstoy - War and Peace.epub',
+    coverImage: '/covers/Leo_Tolstoy_War_and_Peace.jpg',
+    type: 'epub',
+    addedAt: 1700000031000
+  },
+  {
+    id: 'pub-cervantes-don-quixote',
+    name: 'Don Quixote',
+    author: 'Miguel de Cervantes',
+    fileName: 'Miguel de Cervantes - Don Quixote.epub',
+    url: '/books/Miguel de Cervantes - Don Quixote.epub',
+    coverImage: '/covers/Miguel_de_Cervantes_Don_Quixote.jpeg',
+    type: 'epub',
+    addedAt: 1700000032000
+  },
+  {
     id: 'sample-pdf',
     name: 'Aetherius: Architecture of Light',
     author: 'Aetherius Editorial',
